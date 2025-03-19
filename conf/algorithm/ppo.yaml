@@ -1,0 +1,13 @@
+defaults: 
+  - base
+  - env_config: 1on0
+  - env_runners: standard
+
+
+training: 
+  gamma: 0.99
+  # lr: 1e-4
+  train_batch_size_per_learner: 16384
+  # num_epochs: 30
+  minibatch_size: 16384
+  shuffle_batch_per_epoch: True

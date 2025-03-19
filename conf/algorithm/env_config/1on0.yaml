@@ -1,0 +1,9 @@
+blue_size: 1
+orange_size: 0
+
+goal_reward: 1
+touch_reward: 0.01
+ball_proximity_reward: 0.001
+
+timeout_seconds: 300
+no_touch_timeout_seconds: 30

@@ -1,0 +1,3 @@
+defaults:
+  - algorithm: ppo
+  - _self_
