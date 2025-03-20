@@ -6,7 +6,8 @@ from typing import Any
 import numpy as np
 
 from rlgym.rocket_league.api import Car, GameState
-from rlgym.rocket_league.common_values import ORANGE_TEAM
+from rlgym.rocket_league.common_values import ORANGE_TEAM, SIDE_WALL_X, CEILING_Z, BACK_NET_Y
+from env.obs_builders.encoders import fourier_encoder
 
 
 class DefaultObs:
@@ -17,7 +18,7 @@ class DefaultObs:
     def __init__(
         self,
         num_cars=3,
-        pos_coef=1 / 2300,
+        pos_embedding_size=4,
         ang_coef=1 / math.pi,
         lin_vel_coef=1 / 2300,
         ang_vel_coef=1 / math.pi,
@@ -25,7 +26,7 @@ class DefaultObs:
         boost_coef=1 / 100,
     ):
         super().__init__()
-        self.POS_COEF = pos_coef
+        self.position_embedding_size = pos_embedding_size
         self.ANG_COEF = ang_coef
         self.LIN_VEL_COEF = lin_vel_coef
         self.ANG_VEL_COEF = ang_vel_coef
@@ -34,7 +35,7 @@ class DefaultObs:
         self.num_cars = num_cars
 
     def get_obs_space(self, agent: str) -> gym.Space:
-        return gym.spaces.Box(-100, 100, shape=(52 + 20 * self.num_cars * 2,))
+        return gym.spaces.Box(-100, 100, shape=(61 + 29 * self.num_cars * 2,))
 
     def reset(self, agents: list[str], initial_state: GameState, shared_info: dict[str, Any]) -> None:
         pass
@@ -58,7 +59,7 @@ class DefaultObs:
             pads = state.boost_pad_timers
 
         obs = [  # Global stuff
-            ball.position * self.POS_COEF,
+            self._encode_position(ball.position),
             ball.linear_velocity * self.LIN_VEL_COEF,
             ball.angular_velocity * self.ANG_VEL_COEF,
             pads * self.PAD_TIMER_COEF,
@@ -110,7 +111,7 @@ class DefaultObs:
 
         return np.concatenate(
             [
-                physics.position * self.POS_COEF,
+                self._encode_position(physics.position),
                 physics.forward,
                 physics.up,
                 physics.linear_velocity * self.LIN_VEL_COEF,
@@ -124,3 +125,12 @@ class DefaultObs:
                 ],
             ]
         )
+
+    def _encode_position(self, position: np.ndarray) -> np.ndarray:
+        """Encode the shit out of some positions"""
+        encoded = [
+            fourier_encoder(-SIDE_WALL_X, SIDE_WALL_X, position[0], self.position_embedding_size),
+            fourier_encoder(-BACK_NET_Y, BACK_NET_Y, position[1], self.position_embedding_size),
+            fourier_encoder(-CEILING_Z, CEILING_Z, position[2], self.position_embedding_size),
+        ]
+        return np.concatenate(encoded)
