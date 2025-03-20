@@ -3,11 +3,10 @@ from rlgym.rocket_league.rlviser import RLViserRenderer
 from rlgym.rocket_league.sim import RocketSimEngine
 from rlgym.rocket_league.done_conditions import (
     AnyCondition,
-    GoalCondition,
     NoTouchTimeoutCondition,
     TimeoutCondition,
 )
-from rlgym.rocket_league.reward_functions import CombinedReward, GoalReward, TouchReward
+from rlgym.rocket_league.reward_functions import CombinedReward, TouchReward
 from env.obs_builders import DefaultObs
 from env.action_parsers import LookupTableAction, RepeatAction
 from env.rewards_functions import BallProximityReward
@@ -20,6 +19,8 @@ from rlgym.rocket_league.state_mutators import (
 from typing import Any
 from hydra import initialize, compose
 from ray.rllib.env import MultiAgentEnv
+
+from env.termination_conditions.ball_touch_termination import BallTouchTermination
 
 
 class RLEnv(MultiAgentEnv):
@@ -38,11 +39,11 @@ class RLEnv(MultiAgentEnv):
         self.obs_builder = DefaultObs(num_cars=config["blue_size"] + config["orange_size"])
         self.action_parser = RepeatAction(LookupTableAction())
         self.reward_fn = CombinedReward(
-            (GoalReward(), config["goal_reward"]),
+            # (GoalReward(), config["goal_reward"]),
             (TouchReward(), config["touch_reward"]),
             (BallProximityReward(), config["ball_proximity_reward"]),
         )
-        self.termination_cond = GoalCondition()
+        self.termination_cond = BallTouchTermination()
         self.truncation_cond = AnyCondition(
             TimeoutCondition(timeout_seconds=config["timeout_seconds"]),
             NoTouchTimeoutCondition(timeout_seconds=config["no_touch_timeout_seconds"]),

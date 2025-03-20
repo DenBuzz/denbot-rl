@@ -7,7 +7,7 @@ defaults:
 training: 
   gamma: 0.99
   # lr: 1e-4
-  train_batch_size_per_learner: 16384
+  train_batch_size_per_learner: 4096
   # num_epochs: 30
-  minibatch_size: 16384
+  minibatch_size: 2048
   shuffle_batch_per_epoch: True
