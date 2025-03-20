@@ -28,7 +28,7 @@ def run_episode(module: RLModule):
         obs, _, dones, truncs, _ = env.step({"blue-0": action})
         obs = {"denbot": {"obs": torch.tensor(obs["blue-0"])}}
         env.render()
-        sleep(0.01)
+        sleep(0.1)
 
     env.close()
 
