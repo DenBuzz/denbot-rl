@@ -1,13 +1,12 @@
 defaults: 
   - base
   - env_config: 1on0
-  - env_runners: standard
-
+  - env_runners: sweaty
 
 training: 
-  gamma: 0.99
+  gamma: 0.997
   # lr: 1e-4
-  train_batch_size_per_learner: 4096
+  train_batch_size_per_learner: 8192
   # num_epochs: 30
-  minibatch_size: 2048
+  minibatch_size: 1024
   shuffle_batch_per_epoch: True

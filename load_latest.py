@@ -3,7 +3,7 @@ from ray.rllib.core.rl_module import RLModule
 import os
 from pathlib import Path
 from env.env import create_env
-from time import sleep
+from time import sleep, time
 import torch
 
 
@@ -18,9 +18,12 @@ def get_latest_module() -> RLModule:
 def run_episode(module: RLModule):
     env = create_env()
     obs, _ = env.reset()
+    start_time = time()
+
     obs = {"denbot": {"obs": torch.tensor(obs["blue-0"])}}
     dones = {"__all__": False}
     truncs = {"__all__": False}
+    steps = 1
     while not dones["__all__"] and not truncs["__all__"]:
         action = torch.distributions.Categorical(
             logits=module.forward_inference(obs)["denbot"]["action_dist_inputs"]
@@ -28,7 +31,8 @@ def run_episode(module: RLModule):
         obs, _, dones, truncs, _ = env.step({"blue-0": action})
         obs = {"denbot": {"obs": torch.tensor(obs["blue-0"])}}
         env.render()
-        sleep(0.1)
+        sleep(max(0, start_time + steps / 15 - time()))
+        steps += 1
 
     env.close()
 

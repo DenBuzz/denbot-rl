@@ -1,0 +1,18 @@
+{
+  "configurations": [
+    {
+      "name": "Debug env",
+      "program": "env/env.py",
+      "justMyCode": false,
+      "type": "debugpy",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Debug train",
+      "program": "train.py",
+      "justMyCode": false,
+      "type": "debugpy",
+      "console": "integratedTerminal"
+    }
+  ]
+}

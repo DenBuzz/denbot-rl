@@ -1,6 +1,7 @@
 from env.env import create_env
 from env import RLEnv
 import pytest
+from time import sleep
 
 
 @pytest.fixture
@@ -17,8 +18,8 @@ def test_random_episode(env_fixture: RLEnv):
         for agent in obs:
             action[agent] = env_fixture.action_spaces[agent].sample()
         obs, _, dones, truncs, _ = env_fixture.step(action)
-        # env_fixture.render()
-        # sleep(0.01)
+        env_fixture.render()
+        sleep(0.1)
 
     env_fixture.close()
 

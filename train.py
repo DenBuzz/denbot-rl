@@ -2,8 +2,14 @@ from omegaconf import DictConfig
 import hydra
 from ray.rllib.algorithms import PPOConfig
 from ray.tune import Tuner, RunConfig, TuneConfig, CheckpointConfig
+from ray.tune.experiment.trial import Trial
 from ray.tune.stopper import MaximumIterationStopper
 from conf.algorithm import build_config
+from datetime import datetime as dt
+
+
+def dirname_fn(trial: Trial):
+    return f"{dt.now().strftime('%Y-%m-%d-%H-%M-%S')}-{trial.trial_id}"
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="train")
@@ -20,9 +26,9 @@ def main(hydra_cfg: DictConfig):
                 checkpoint_frequency=100,
                 checkpoint_at_end=True,
             ),
-            stop=MaximumIterationStopper(max_iter=10_000),
+            stop=MaximumIterationStopper(max_iter=40_000),
         ),
-        tune_config=TuneConfig(num_samples=1),
+        tune_config=TuneConfig(num_samples=3, trial_dirname_creator=dirname_fn),
     )
 
     return tuner.fit()

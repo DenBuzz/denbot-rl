@@ -13,13 +13,14 @@ from env.rewards_functions import BallProximityReward
 
 from rlgym.rocket_league.state_mutators import (
     FixedTeamSizeMutator,
-    KickoffMutator,
     MutatorSequence,
 )
 from typing import Any
 from hydra import initialize, compose
 from ray.rllib.env import MultiAgentEnv
 
+from env.rewards_functions.ball_heading_reward import BallHeadingReward
+from env.state_mutators.random import RandomBallLocation, RandomCarLocation
 from env.termination_conditions.ball_touch_termination import BallTouchTermination
 
 
@@ -34,7 +35,9 @@ class RLEnv(MultiAgentEnv):
         self.config = config
         self.state_mutator = MutatorSequence(
             FixedTeamSizeMutator(blue_size=config["blue_size"], orange_size=config["orange_size"]),
-            KickoffMutator(),
+            # KickoffMutator(),
+            RandomBallLocation(),
+            RandomCarLocation(),
         )
         self.obs_builder = DefaultObs(num_cars=config["blue_size"] + config["orange_size"])
         self.action_parser = RepeatAction(LookupTableAction())
@@ -42,6 +45,7 @@ class RLEnv(MultiAgentEnv):
             # (GoalReward(), config["goal_reward"]),
             (TouchReward(), config["touch_reward"]),
             (BallProximityReward(), config["ball_proximity_reward"]),
+            (BallHeadingReward(), config["ball_heading_reward"]),
         )
         self.termination_cond = BallTouchTermination()
         self.truncation_cond = AnyCondition(
