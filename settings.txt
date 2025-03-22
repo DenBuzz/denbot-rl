@@ -1,12 +1,12 @@
 vsync=false
 uncap_fps=false
-fps_limit=120
+fps_limit=60
 ball_cam=true
 stop_day=true
 daytime=30
 day_speed=10
 msaa=2
-camera_state="Spectator"
+camera_state={"Director":0}
 show_time=true
 ui_scale=1
 shadows=0

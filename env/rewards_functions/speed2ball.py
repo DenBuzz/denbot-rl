@@ -1,5 +1,5 @@
 import numpy as np
-from rlgym.rocket_league.common_values import SIDE_WALL_X, BACK_WALL_Y, CEILING_Z
+from rlgym.rocket_league.common_values import ORANGE_TEAM, SIDE_WALL_X, BACK_WALL_Y, CEILING_Z
 from typing import Any
 
 from rlgym.rocket_league.api import GameState
@@ -7,7 +7,7 @@ from rlgym.rocket_league.api import GameState
 MAX_FIELD_DIST = np.sqrt((SIDE_WALL_X * 2) ** 2 + (BACK_WALL_Y * 2) ** 2 + (CEILING_Z) ** 2)
 
 
-class BallHeadingReward:
+class Speed2Ball:
     """
     A RewardFunction that gives a reward of 1 if the agent touches the ball, 0 otherwise.
     """
@@ -26,22 +26,19 @@ class BallHeadingReward:
         return {agent: self._get_reward(agent, state) for agent in agents}
 
     def _get_reward(self, agent: str, state: GameState) -> float:
-        agent_phys = state.cars[agent].physics
-        vel_u = agent_phys.linear_velocity / np.linalg.norm(agent_phys.linear_velocity)
-        ball_vec = state.ball.position - agent_phys.position
+        car = state.cars[agent]
+        if car.team_num == ORANGE_TEAM:
+            phys = car.inverted_physics
+            ball = state.inverted_ball
+        else:
+            phys = car.physics
+            ball = state.ball
+
+        norm = np.linalg.norm(phys.linear_velocity)
+        if norm == 0:
+            return 0
+
+        vel_u = phys.linear_velocity / norm
+        ball_vec = ball.position - phys.position
         ball_vec_u = ball_vec / np.linalg.norm(ball_vec)
         return np.dot(ball_vec_u, vel_u)
-
-    @staticmethod
-    def distance_to_reward(dist):
-        return 1.1 * np.exp2(-dist / 1500) - 0.1
-
-
-# if __name__ == "__main__":
-#     distances = np.linspace(0, MAX_FIELD_DIST, 1000)
-#
-#     fig = plt.figure(figsize=(8, 4))
-#     ax = fig.add_subplot()
-#     ax.plot(distances, BallProximityReward.distance_to_reward(distances))
-#     ax.grid()
-#     plt.show()

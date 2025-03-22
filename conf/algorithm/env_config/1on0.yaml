@@ -4,7 +4,11 @@ orange_size: 0
 # goal_reward: 1
 touch_reward: 1
 ball_proximity_reward: 0.005
-ball_heading_reward: 0.001
+speed2ball_reward: 0.001
+facing_ball_reward: 0.001
+
+obs_builder:
+  pos_frequencies: 6
 
 timeout_seconds: 300
 no_touch_timeout_seconds: 30

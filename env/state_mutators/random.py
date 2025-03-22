@@ -13,8 +13,8 @@ class RandomBallLocation:
         self.rng = np.random.default_rng()
 
     def apply(self, state: GameState, shared_info: dict[str, Any]) -> None:
-        x = (self.rng.random() - 0.5) * 2 * (SIDE_WALL_X - 4 * BALL_RADIUS)
-        y = (self.rng.random() - 0.5) * 2 * (BACK_WALL_Y - 4 * BALL_RADIUS)
+        x = (self.rng.random() - 0.5) * 2 * (SIDE_WALL_X - 8 * BALL_RADIUS)
+        y = (self.rng.random() - 0.5) * 2 * (BACK_WALL_Y - 8 * BALL_RADIUS)
         state.ball.position = np.array([x, y, BALL_RESTING_HEIGHT], dtype=np.float32)
         state.ball.linear_velocity = np.zeros(3, dtype=np.float32)
         state.ball.angular_velocity = np.zeros(3, dtype=np.float32)

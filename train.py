@@ -23,12 +23,12 @@ def main(hydra_cfg: DictConfig):
             storage_path="~/src/denbot-rl/ray_results",
             checkpoint_config=CheckpointConfig(
                 num_to_keep=5,
-                checkpoint_frequency=100,
+                checkpoint_frequency=20,
                 checkpoint_at_end=True,
             ),
-            stop=MaximumIterationStopper(max_iter=40_000),
+            stop=MaximumIterationStopper(max_iter=20_000),
         ),
-        tune_config=TuneConfig(num_samples=3, trial_dirname_creator=dirname_fn),
+        tune_config=TuneConfig(num_samples=1, trial_dirname_creator=dirname_fn),
     )
 
     return tuner.fit()

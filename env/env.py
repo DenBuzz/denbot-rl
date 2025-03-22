@@ -7,8 +7,9 @@ from rlgym.rocket_league.done_conditions import (
     TimeoutCondition,
 )
 from rlgym.rocket_league.reward_functions import CombinedReward, TouchReward
+from env.action_parsers.seer_action import SeerActionParser
 from env.obs_builders import DefaultObs
-from env.action_parsers import LookupTableAction, RepeatAction
+from env.action_parsers import RepeatAction
 from env.rewards_functions import BallProximityReward
 
 from rlgym.rocket_league.state_mutators import (
@@ -19,7 +20,8 @@ from typing import Any
 from hydra import initialize, compose
 from ray.rllib.env import MultiAgentEnv
 
-from env.rewards_functions.ball_heading_reward import BallHeadingReward
+from env.rewards_functions.facing_ball import FacingBall
+from env.rewards_functions.speed2ball import Speed2Ball
 from env.state_mutators.random import RandomBallLocation, RandomCarLocation
 from env.termination_conditions.ball_touch_termination import BallTouchTermination
 
@@ -39,13 +41,14 @@ class RLEnv(MultiAgentEnv):
             RandomBallLocation(),
             RandomCarLocation(),
         )
-        self.obs_builder = DefaultObs(num_cars=config["blue_size"] + config["orange_size"])
-        self.action_parser = RepeatAction(LookupTableAction())
+        self.obs_builder = DefaultObs(num_cars=config["blue_size"] + config["orange_size"], **config["obs_builder"])
+        self.action_parser = RepeatAction(SeerActionParser())
         self.reward_fn = CombinedReward(
             # (GoalReward(), config["goal_reward"]),
             (TouchReward(), config["touch_reward"]),
             (BallProximityReward(), config["ball_proximity_reward"]),
-            (BallHeadingReward(), config["ball_heading_reward"]),
+            (Speed2Ball(), config["speed2ball_reward"]),
+            (FacingBall(), config["facing_ball_reward"]),
         )
         self.termination_cond = BallTouchTermination()
         self.truncation_cond = AnyCondition(
@@ -84,13 +87,13 @@ class RLEnv(MultiAgentEnv):
         self.truncation_cond.reset(agents, state, {})
         self.reward_fn.reset(agents, state, {})
 
-        return self.obs_builder.build_obs(agents, state, {}), {}
+        return self.obs_builder.build_obs(agents, state), {}
 
     def step(self, action: dict[str, Any]) -> Any:
         engine_actions = self.action_parser.parse_actions(action, self.state, {})
         new_state = self.sim.step(engine_actions, {})
         agents = self.agents
-        obs = self.obs_builder.build_obs(agents, new_state, {})
+        obs = self.obs_builder.build_obs(agents, new_state)
         is_terminated = self.termination_cond.is_done(agents, new_state, {})
         if all(is_terminated.values()):
             is_terminated["__all__"] = True

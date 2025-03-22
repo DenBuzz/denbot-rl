@@ -32,7 +32,7 @@ class BallProximityReward:
 
     @staticmethod
     def distance_to_reward(dist):
-        return 1.1 * np.exp2(-dist / 1500) - 0.1
+        return np.exp2(-dist / 2500) - 1
 
 
 if __name__ == "__main__":
