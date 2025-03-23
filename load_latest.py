@@ -1,19 +1,49 @@
 import glob
-from ray.rllib.core.rl_module import RLModule
 import os
 from pathlib import Path
-from env.env import RLEnv, create_env
 from time import sleep, time
+
 import torch
+from ray.rllib.connectors.env_to_module import EnvToModulePipeline
+from ray.rllib.connectors.module_to_env import ModuleToEnvPipeline
+from ray.rllib.core import (
+    COMPONENT_ENV_RUNNER,
+    COMPONENT_ENV_TO_MODULE_CONNECTOR,
+    COMPONENT_LEARNER,
+    COMPONENT_LEARNER_GROUP,
+    COMPONENT_MODULE_TO_ENV_CONNECTOR,
+    COMPONENT_RL_MODULE,
+    Columns,
+)
+from ray.rllib.core.rl_module import RLModule
+from ray.rllib.env.multi_agent_episode import MultiAgentEpisode
+
+from conf.algorithm import mapping_fn
+from env.env import RLEnv, create_env
 
 
-def get_latest_module() -> RLModule:
-    dir_str = "ray_results/**/rl_module/"
+def get_most_recent_checkpoint() -> Path:
+    dir_str = "ray_results/**/checkpoint_*/"
     all_checkpoints = glob.glob(dir_str, recursive=True)
     most_recent_checkpoint = max(all_checkpoints, key=os.path.getmtime)
-    print(f"loading: {most_recent_checkpoint}")
+    print(f"Found: {most_recent_checkpoint}")
 
-    return RLModule.from_checkpoint(path=Path(most_recent_checkpoint).absolute())
+    return Path(most_recent_checkpoint).absolute()
+
+
+def load_components_from_checkpoint(path) -> tuple[RLModule, EnvToModulePipeline, ModuleToEnvPipeline]:
+    rl_module = RLModule.from_checkpoint(Path(path, COMPONENT_LEARNER_GROUP, COMPONENT_LEARNER, COMPONENT_RL_MODULE))
+    env_to_module = EnvToModulePipeline.from_checkpoint(
+        Path(path, COMPONENT_ENV_RUNNER, COMPONENT_ENV_TO_MODULE_CONNECTOR)
+    )
+    module_to_env = ModuleToEnvPipeline.from_checkpoint(
+        Path(
+            path,
+            COMPONENT_ENV_RUNNER,
+            COMPONENT_MODULE_TO_ENV_CONNECTOR,
+        )
+    )
+    return rl_module, env_to_module, module_to_env
 
 
 def sample_action(action_dist_inputs, space):
@@ -25,21 +55,28 @@ def sample_action(action_dist_inputs, space):
     return action
 
 
-def run_episode(env: RLEnv, module: RLModule):
+def run_episode(
+    env: RLEnv, rl_module: RLModule, env_to_module: EnvToModulePipeline, module_to_env: ModuleToEnvPipeline
+):
     obs, _ = env.reset()
     start_time = time()
+    episode = MultiAgentEpisode(
+        observations=[obs],
+        agent_to_module_mapping_fn=mapping_fn,
+        # observation_space=env.observation_space,
+        # action_space=env.action_space,
+    )
 
-    obs = {"denbot": {"obs": torch.tensor(obs["blue-0"])}}
-    dones = {"__all__": False}
-    truncs = {"__all__": False}
     steps = 0
-    while not dones["__all__"] and not truncs["__all__"]:
-        action = sample_action(
-            action_dist_inputs=module.forward_inference(obs)["denbot"]["action_dist_inputs"],
-            space=env.action_spaces["blue-0"],
-        )
-        obs, _, dones, truncs, _ = env.step({"blue-0": action})
-        obs = {"denbot": {"obs": torch.tensor(obs["blue-0"])}}
+    while not episode.is_done:
+        input_dict = env_to_module(episodes=[episode], rl_module=rl_module, explore=True)
+        rl_module_out = rl_module.forward_inference(input_dict)
+        to_env = module_to_env(batch=rl_module_out, episodes=[episode], rl_module=rl_module)
+        action = to_env.pop(Columns.ACTIONS)[0]
+
+        obs, reward, terminated, truncated, _ = env.step(action)
+        episode.add_env_step(obs, action, reward, terminateds=terminated, truncateds=truncated)
+
         env.render()
         sleep(max(0, start_time + steps / 15 - time()))
         steps += 1
@@ -48,5 +85,6 @@ def run_episode(env: RLEnv, module: RLModule):
 if __name__ == "__main__":
     env = create_env()
     while True:
-        rl_module = get_latest_module()
-        run_episode(env, rl_module)
+        most_recent_checkpoint = get_most_recent_checkpoint()
+        rl_module, env_to_module, module_to_env = load_components_from_checkpoint(most_recent_checkpoint)
+        run_episode(env, rl_module, env_to_module, module_to_env)

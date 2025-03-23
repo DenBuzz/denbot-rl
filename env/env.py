@@ -62,11 +62,6 @@ class RLEnv(MultiAgentEnv):
     def state(self) -> GameState:
         return self.sim.state
 
-    def set_state(self, desired_state: GameState) -> dict[str, Any]:
-        state = self.sim.set_state(desired_state, {})
-        agents = self.agents
-        return self.obs_builder.build_obs(agents, state, {})
-
     def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None):
         initial_state = self.sim.create_base_state()
         self.state_mutator.apply(initial_state, {})
