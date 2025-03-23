@@ -1,5 +1,5 @@
 import numpy as np
-from rlgym.rocket_league.common_values import SIDE_WALL_X, BACK_WALL_Y, CEILING_Z
+from rlgym.rocket_league.common_values import BALL_RADIUS, CAR_MAX_SPEED, SIDE_WALL_X, BACK_WALL_Y, CEILING_Z
 from typing import Any
 import matplotlib.pyplot as plt
 
@@ -27,12 +27,12 @@ class BallProximityReward:
         return {agent: self._get_reward(agent, state) for agent in agents}
 
     def _get_reward(self, agent: str, state: GameState) -> float:
-        agent_dist = np.linalg.norm(state.cars[agent].physics.position - state.ball.position)
+        agent_dist = np.linalg.norm(state.cars[agent].physics.position - state.ball.position) - BALL_RADIUS
         return self.distance_to_reward(agent_dist)
 
     @staticmethod
     def distance_to_reward(dist):
-        return np.exp2(-dist / 2500) - 1
+        return np.exp2(-dist / CAR_MAX_SPEED)
 
 
 if __name__ == "__main__":

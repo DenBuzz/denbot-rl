@@ -25,9 +25,9 @@ def fourier_encoder(min, max, value, frequencies=4, periodic=False):
 
 
 def test_fourier_encoder():
-    x_min, x_max = -1000, 2000
+    x_min, x_max = -np.pi, np.pi
     x = np.linspace(x_min, x_max, 10_000)
-    feats = np.array([fourier_encoder(x_min, x_max, v, 6, periodic=False) for v in x])
+    feats = np.array([fourier_encoder(x_min, x_max, v, 2, periodic=True) for v in x])
 
     fig = plt.figure()
     ax = fig.add_subplot()

@@ -8,7 +8,7 @@ import numpy as np
 from rlgym.rocket_league.api import Car, GameState, PhysicsObject
 from rlgym.rocket_league.common_values import BACK_WALL_Y, ORANGE_TEAM
 
-from env.obs_builders.encoders import encode_position
+from env.obs_builders.encoders import encode_position, fourier_encoder
 
 
 class ObsBuilder:
@@ -46,7 +46,7 @@ class DefaultObs(ObsBuilder):
             -100,
             100,
             shape=(
-                40 + 9 + 3 * 2 * self.position_frequencies + 25 + 3 * 2 * self.position_frequencies * self.num_cars,
+                40 + 9 + 3 * 2 * self.position_frequencies + 29 + 3 * 2 * self.position_frequencies * self.num_cars,
             ),
         )
 
@@ -134,9 +134,13 @@ class DefaultObs(ObsBuilder):
 
         pointing_ball_dot = np.dot(physics.forward, ball_vec_u)
 
+        xy_angle_offset = np.arccos(np.dot(physics.forward[:2], ball_vec_u[:2]))
+        xy_ball_angle = np.sign(np.cross(physics.forward[:2], ball_vec_u[:2])) * xy_angle_offset
+
         return np.concatenate(
             [
                 encode_position(physics.position, frequencies=self.position_frequencies),  # 3*2*freqs
+                fourier_encoder(-np.pi, np.pi, xy_ball_angle, frequencies=2, periodic=True),
                 physics.forward,
                 physics.up,
                 physics.linear_velocity * self.LIN_VEL_COEF,

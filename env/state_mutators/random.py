@@ -28,11 +28,11 @@ class RandomCarLocation:
         ball_pos = state.ball.position
 
         for car in state.cars.values():
-            x = (self.rng.random() - 0.5) * 2 * (SIDE_WALL_X - 4 * BALL_RADIUS)
-            y = (self.rng.random() - 0.5) * 2 * (BACK_WALL_Y - 4 * BALL_RADIUS)
-            while np.linalg.norm(ball_pos[:2] - np.array([x, y])) < 2 * BALL_RADIUS:
-                x = (self.rng.random() - 0.5) * 2 * (SIDE_WALL_X - 4 * BALL_RADIUS)
-                y = (self.rng.random() - 0.5) * 2 * (BACK_WALL_Y - 4 * BALL_RADIUS)
+            x = (self.rng.random() - 0.5) * 2 * (SIDE_WALL_X - 8 * BALL_RADIUS)
+            y = (self.rng.random() - 0.5) * 2 * (BACK_WALL_Y - 8 * BALL_RADIUS)
+            while np.linalg.norm(ball_pos[:2] - np.array([x, y])) < 40 * BALL_RADIUS:
+                x = (self.rng.random() - 0.5) * 2 * (SIDE_WALL_X - 8 * BALL_RADIUS)
+                y = (self.rng.random() - 0.5) * 2 * (BACK_WALL_Y - 8 * BALL_RADIUS)
 
             car.physics.position = np.array([x, y, 100])
             car.physics.linear_velocity = np.zeros(3, dtype=np.float32)

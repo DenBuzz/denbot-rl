@@ -49,6 +49,7 @@ class RLEnv(MultiAgentEnv):
             (BallProximityReward(), config["ball_proximity_reward"]),
             (Speed2Ball(), config["speed2ball_reward"]),
             (FacingBall(), config["facing_ball_reward"]),
+            # (CanFlip(), config["can_flip_reward"]),
         )
         self.termination_cond = BallTouchTermination()
         self.truncation_cond = AnyCondition(
