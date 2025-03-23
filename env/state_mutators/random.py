@@ -16,7 +16,7 @@ class RandomBallLocation:
         x = (self.rng.random() - 0.5) * 2 * (SIDE_WALL_X - 8 * BALL_RADIUS)
         y = (self.rng.random() - 0.5) * 2 * (BACK_WALL_Y - 8 * BALL_RADIUS)
         state.ball.position = np.array([x, y, BALL_RESTING_HEIGHT], dtype=np.float32)
-        state.ball.linear_velocity = np.zeros(3, dtype=np.float32)
+        state.ball.linear_velocity = np.array([np.random.normal(scale=500), np.random.normal(scale=500), 0])
         state.ball.angular_velocity = np.zeros(3, dtype=np.float32)
 
 

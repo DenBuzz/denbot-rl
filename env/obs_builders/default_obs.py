@@ -46,7 +46,7 @@ class DefaultObs(ObsBuilder):
             -100,
             100,
             shape=(
-                40 + 9 + 3 * 2 * self.position_frequencies + 29 + 3 * 2 * self.position_frequencies * self.num_cars,
+                40 + 9 + 3 * 2 * self.position_frequencies + 31 + 3 * 2 * self.position_frequencies * self.num_cars,
             ),
         )
 
@@ -140,7 +140,7 @@ class DefaultObs(ObsBuilder):
         return np.concatenate(
             [
                 encode_position(physics.position, frequencies=self.position_frequencies),  # 3*2*freqs
-                fourier_encoder(-np.pi, np.pi, xy_ball_angle, frequencies=2, periodic=True),
+                fourier_encoder(-np.pi, np.pi, xy_ball_angle, frequencies=3, periodic=True),
                 physics.forward,
                 physics.up,
                 physics.linear_velocity * self.LIN_VEL_COEF,

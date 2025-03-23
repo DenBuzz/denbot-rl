@@ -23,3 +23,4 @@ dependencies = [
 
 [tool.ruff]
 line-length = 120
+extend-select = ["I"]

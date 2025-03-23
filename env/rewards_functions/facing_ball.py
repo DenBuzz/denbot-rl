@@ -1,8 +1,8 @@
-import numpy as np
-from rlgym.rocket_league.common_values import ORANGE_TEAM, SIDE_WALL_X, BACK_WALL_Y, CEILING_Z
 from typing import Any
 
+import numpy as np
 from rlgym.rocket_league.api import GameState
+from rlgym.rocket_league.common_values import BACK_WALL_Y, CEILING_Z, ORANGE_TEAM, SIDE_WALL_X
 
 MAX_FIELD_DIST = np.sqrt((SIDE_WALL_X * 2) ** 2 + (BACK_WALL_Y * 2) ** 2 + (CEILING_Z) ** 2)
 
