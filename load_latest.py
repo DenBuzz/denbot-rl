@@ -69,9 +69,12 @@ def run_episode(
 
     steps = 0
     while not episode.is_done:
-        input_dict = env_to_module(episodes=[episode], rl_module=rl_module, explore=True)
+        shared_data = {}
+        input_dict = env_to_module(episodes=[episode], rl_module=rl_module, explore=True, shared_data=shared_data)
         rl_module_out = rl_module.forward_inference(input_dict)
-        to_env = module_to_env(batch=rl_module_out, episodes=[episode], rl_module=rl_module)
+        to_env = module_to_env(
+            batch=rl_module_out, episodes=[episode], rl_module=rl_module, explore=True, shared_data=shared_data
+        )
         action = to_env.pop(Columns.ACTIONS)[0]
 
         obs, reward, terminated, truncated, _ = env.step(action)
