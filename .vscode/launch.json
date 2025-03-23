@@ -2,6 +2,7 @@
   "configurations": [
     {
       "name": "Debug env",
+      "request": "launch",
       "program": "env/env.py",
       "justMyCode": false,
       "type": "debugpy",
@@ -9,7 +10,16 @@
     },
     {
       "name": "Debug train",
+      "request": "launch",
       "program": "train.py",
+      "justMyCode": false,
+      "type": "debugpy",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Debug load_latest",
+      "request": "launch",
+      "program": "load_latest.py",
       "justMyCode": false,
       "type": "debugpy",
       "console": "integratedTerminal"
