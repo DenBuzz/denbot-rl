@@ -1,6 +1,8 @@
 from datetime import datetime as dt
 
 import hydra
+
+# import ray
 from omegaconf import DictConfig
 from ray.rllib.algorithms import PPOConfig
 from ray.tune import CheckpointConfig, RunConfig, TuneConfig, Tuner
@@ -25,7 +27,7 @@ def main(hydra_cfg: DictConfig):
             storage_path="~/src/denbot-rl/ray_results",
             checkpoint_config=CheckpointConfig(
                 num_to_keep=5,
-                checkpoint_frequency=10,
+                checkpoint_frequency=20,
                 checkpoint_at_end=True,
             ),
             stop=MaximumIterationStopper(max_iter=20_000),
@@ -33,6 +35,7 @@ def main(hydra_cfg: DictConfig):
         tune_config=TuneConfig(num_samples=1, trial_dirname_creator=dirname_fn),
     )
 
+    # ray.init(local_mode=True)
     return tuner.fit()
 
 

@@ -84,3 +84,8 @@ def velocity_player_to_ball(car: Car, car_physics: PhysicsObject, ball: PhysicsO
     ball_vec = ball.position - car_physics.position
     ball_vec_u = ball_vec / np.linalg.norm(ball_vec)
     return np.dot(ball_vec_u, vel_u)
+
+
+def velocity(car: Car, car_physics: PhysicsObject, ball: PhysicsObject) -> float:
+    norm = float(np.linalg.norm(car_physics.linear_velocity))
+    return norm / common_values.CAR_MAX_SPEED

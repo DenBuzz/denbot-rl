@@ -11,16 +11,12 @@ from rlgym.rocket_league.done_conditions import (
 )
 from rlgym.rocket_league.rlviser import RLViserRenderer
 from rlgym.rocket_league.sim import RocketSimEngine
-from rlgym.rocket_league.state_mutators import (
-    FixedTeamSizeMutator,
-    MutatorSequence,
-)
 
 from env.action_parsers import RepeatAction
 from env.action_parsers.seer_action import SeerActionParser
 from env.denbot_reward import DenBotReward
 from env.obs_builders import DefaultObs
-from env.state_mutators.random import RandomBallLocation, RandomCarLocation
+from env.state_mutators.airial_curriculum import AirialCurriculum
 from env.termination_conditions.ball_touch_termination import BallTouchTermination
 
 
@@ -33,12 +29,7 @@ class RLEnv(MultiAgentEnv):
     def __init__(self, config):
         super().__init__()
         self.config = config
-        self.state_mutator = MutatorSequence(
-            FixedTeamSizeMutator(blue_size=config["blue_size"], orange_size=config["orange_size"]),
-            # KickoffMutator(),
-            RandomBallLocation(),
-            RandomCarLocation(),
-        )
+        self.state_mutator = AirialCurriculum()
         self.obs_builder = DefaultObs(num_cars=config["blue_size"] + config["orange_size"], **config["obs_builder"])
         self.action_parser = RepeatAction(SeerActionParser())
         self.reward_fn = DenBotReward(**config["rewards"])
@@ -64,7 +55,7 @@ class RLEnv(MultiAgentEnv):
 
     def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None):
         initial_state = self.sim.create_base_state()
-        self.state_mutator.apply(initial_state, {})
+        self.state_mutator.apply(initial_state, self.sim)
         state = self.sim.set_state(initial_state, {})
 
         agents = self.agents = self.sim.agents

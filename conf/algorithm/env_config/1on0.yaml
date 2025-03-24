@@ -6,9 +6,10 @@ rewards:
   distance_player_ball: 0.0025
   velocity_player_to_ball: 0.00125
   facing_ball: 0.000625
+  velocity: 0.000625
 
 obs_builder:
   pos_frequencies: 6
 
 timeout_seconds: 300
-no_touch_timeout_seconds: 30
+no_touch_timeout_seconds: 10

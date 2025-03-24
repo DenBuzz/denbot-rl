@@ -1,6 +1,6 @@
-import numpy as np
 import matplotlib.pyplot as plt
-from rlgym.rocket_league.common_values import SIDE_WALL_X, CEILING_Z, BACK_NET_Y
+import numpy as np
+from rlgym.rocket_league.common_values import BACK_NET_Y, CEILING_Z, SIDE_WALL_X
 
 
 def encode_position(position: np.ndarray, frequencies: int = 4) -> np.ndarray:
@@ -25,9 +25,9 @@ def fourier_encoder(min, max, value, frequencies=4, periodic=False):
 
 
 def test_fourier_encoder():
-    x_min, x_max = -np.pi, np.pi
+    x_min, x_max = -np.pi / 2, np.pi / 2
     x = np.linspace(x_min, x_max, 10_000)
-    feats = np.array([fourier_encoder(x_min, x_max, v, 2, periodic=True) for v in x])
+    feats = np.array([fourier_encoder(x_min, x_max, v, 3, periodic=False) for v in x])
 
     fig = plt.figure()
     ax = fig.add_subplot()

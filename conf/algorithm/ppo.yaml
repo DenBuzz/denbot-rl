@@ -4,12 +4,14 @@ defaults:
   - env_runners: sweaty
 
 training: 
-  gamma: 0.995
+  gamma: 0.99
   lambda_: 0.95
   lr: 1e-5
-  entropy_coeff: 0.005
-  train_batch_size_per_learner: 4096
+  # entropy_coeff:
+  #   - [0, 0.02]
+  #   - [1.5e7, 0.001]
+  train_batch_size_per_learner: 8192
   num_epochs: 32
-  minibatch_size: 1024
+  minibatch_size: 2048
   shuffle_batch_per_epoch: True
   use_kl_loss: false

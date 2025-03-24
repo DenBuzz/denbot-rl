@@ -1,10 +1,8 @@
-import gymnasium as gym
-
 import math
 from typing import Any
 
+import gymnasium as gym
 import numpy as np
-
 from rlgym.rocket_league.api import Car, GameState, PhysicsObject
 from rlgym.rocket_league.common_values import BACK_WALL_Y, ORANGE_TEAM
 
@@ -46,7 +44,13 @@ class DefaultObs(ObsBuilder):
             -100,
             100,
             shape=(
-                40 + 9 + 3 * 2 * self.position_frequencies + 31 + 3 * 2 * self.position_frequencies * self.num_cars,
+                34
+                + 3
+                + 3
+                + 9
+                + 3 * 2 * self.position_frequencies
+                + 39
+                + 3 * 2 * self.position_frequencies * self.num_cars,
             ),
         )
 
@@ -137,10 +141,14 @@ class DefaultObs(ObsBuilder):
         xy_angle_offset = np.arccos(np.dot(physics.forward[:2], ball_vec_u[:2]))
         xy_ball_angle = np.sign(np.cross(physics.forward[:2], ball_vec_u[:2])) * xy_angle_offset
 
+        ball_horizontal_dist = np.linalg.norm(ball_vec[:2])
+        vertical_offset_angle = np.arctan2(ball.position[2] - physics.position[2], ball_horizontal_dist)
+
         return np.concatenate(
             [
                 encode_position(physics.position, frequencies=self.position_frequencies),  # 3*2*freqs
                 fourier_encoder(-np.pi, np.pi, xy_ball_angle, frequencies=3, periodic=True),
+                fourier_encoder(-np.pi / 2, np.pi / 2, vertical_offset_angle, frequencies=3, periodic=False),
                 physics.forward,
                 physics.up,
                 physics.linear_velocity * self.LIN_VEL_COEF,
@@ -150,6 +158,8 @@ class DefaultObs(ObsBuilder):
                 [
                     pointing_ball_dot,
                     vel_ball_dot,
+                    ball_horizontal_dist / (2 * BACK_WALL_Y),
+                    np.linalg.norm(ball_vec) / (2 * BACK_WALL_Y),
                     car.boost_amount * self.BOOST_COEF,
                     car.demo_respawn_timer,
                     int(car.on_ground),
