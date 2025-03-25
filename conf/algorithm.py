@@ -1,5 +1,6 @@
 # from pathlib import Path
 
+from hydra.utils import instantiate
 from ray.rllib.algorithms import AlgorithmConfig
 
 # from ray.rllib.core.rl_module import RLModuleSpec
@@ -12,11 +13,12 @@ def mapping_fn(agent_id: str, episode):
 
 
 def build_config(algo_class: type[AlgorithmConfig], config):
+    foo = instantiate(config.env_config)
     algo_config = (
         algo_class()
         .environment(
             env=RLEnv,
-            env_config=config.env_config,
+            env_config=instantiate(config.env_config),
         )
         .training(
             entropy_coeff=[(0, 0.02), (5e7, 0.0001)],

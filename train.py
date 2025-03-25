@@ -18,7 +18,7 @@ def dirname_fn(trial: Trial):
 
 @hydra.main(version_base=None, config_path="conf", config_name="train")
 def main(hydra_cfg: DictConfig):
-    algo_config = build_config(PPOConfig, hydra_cfg.algorithm)
+    algo_config = build_config(PPOConfig, hydra_cfg.exp)
     tuner = Tuner(
         algo_config.algo_class,
         param_space=algo_config,

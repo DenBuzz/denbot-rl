@@ -12,6 +12,9 @@
       "name": "Debug train",
       "request": "launch",
       "program": "train.py",
+      "args": [
+        "exp=airial_training"
+      ],
       "justMyCode": false,
       "type": "debugpy",
       "console": "integratedTerminal"

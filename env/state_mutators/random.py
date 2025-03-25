@@ -1,5 +1,3 @@
-from typing import Any
-
 import numpy as np
 from rlgym.rocket_league.api import GameState
 from rlgym.rocket_league.common_values import BACK_WALL_Y, BALL_RADIUS, BALL_RESTING_HEIGHT, SIDE_WALL_X
@@ -13,7 +11,7 @@ class RandomBallLocation:
     def __init__(self) -> None:
         self.rng = np.random.default_rng()
 
-    def apply(self, state: GameState, shared_info: dict[str, Any]) -> None:
+    def apply(self, state: GameState) -> None:
         state.ball.position = np.array(
             [
                 (self.rng.random() - 0.5) * 2 * (SIDE_WALL_X - 40 * BALL_RADIUS),
@@ -36,7 +34,7 @@ class RandomCarLocation:
     def __init__(self) -> None:
         self.rng = np.random.default_rng()
 
-    def apply(self, state: GameState, shared_info: dict[str, Any]) -> None:
+    def apply(self, state: GameState) -> None:
         ball_pos = state.ball.position
 
         for car in state.cars.values():

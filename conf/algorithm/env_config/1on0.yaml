@@ -8,6 +8,12 @@ rewards:
   facing_ball: 0.000625
   velocity: 0.000625
 
+state_mutator:
+  _target_: env.state_mutators.airial_curriculum.AirialTraining
+  blue_size: 1
+  orange_size: 0
+  ball_height: 1000
+
 obs_builder:
   pos_frequencies: 6
 

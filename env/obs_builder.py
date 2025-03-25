@@ -1,12 +1,11 @@
 import math
-from typing import Any
 
 import gymnasium as gym
 import numpy as np
 from rlgym.rocket_league.api import Car, GameState, PhysicsObject
 from rlgym.rocket_league.common_values import BACK_WALL_Y, ORANGE_TEAM
 
-from env.obs_builders.encoders import encode_position, fourier_encoder
+from env.encoders import encode_position, fourier_encoder
 
 
 class ObsBuilder:
@@ -53,9 +52,6 @@ class DefaultObs(ObsBuilder):
                 + 3 * 2 * self.position_frequencies * self.num_cars,
             ),
         )
-
-    def reset(self, agents: list[str], initial_state: GameState, shared_info: dict[str, Any]) -> None:
-        pass
 
     def build_obs(self, agents: list[str], state: GameState) -> dict[str, np.ndarray]:
         obs = {}

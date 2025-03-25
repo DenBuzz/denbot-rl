@@ -48,10 +48,11 @@ class DenBotReward:
             car_phys = car.physics
             ball = state.ball
 
-        reward_inputs = (car, car_phys, ball)
+        reward_inputs = (car, car_phys, ball, state)
 
         reward = (
-            ball_touch(*reward_inputs) * self.ball_touch
+            goal_scored(*reward_inputs) * self.goal_scored
+            + ball_touch(*reward_inputs) * self.ball_touch
             + distance_player_ball(*reward_inputs) * self.distance_player_ball
             + facing_ball(*reward_inputs) * self.facing_ball
             + velocity_player_to_ball(*reward_inputs) * self.velocity_player_to_ball
@@ -60,22 +61,29 @@ class DenBotReward:
         return reward
 
 
-def distance_player_ball(car: Car, car_physics: PhysicsObject, ball: PhysicsObject) -> float:
+def goal_scored(car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
+    if state.scoring_team != car.team_num:
+        return -1
+    ball_speed_bonus = np.linalg.norm(ball.linear_velocity) / common_values.BALL_MAX_SPEED
+    return 1.0 + float(ball_speed_bonus)
+
+
+def distance_player_ball(car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
     agent_dist = np.linalg.norm(car_physics.position - ball.position) - common_values.BALL_RADIUS
     return np.exp2(-agent_dist / common_values.CAR_MAX_SPEED)
 
 
-def ball_touch(car: Car, car_physics: PhysicsObject, ball: PhysicsObject) -> float:
+def ball_touch(car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
     return int(car.ball_touches > 0)
 
 
-def facing_ball(car: Car, car_physics: PhysicsObject, ball: PhysicsObject) -> float:
+def facing_ball(car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
     ball_vec = ball.position - car_physics.position
     ball_vec_u = ball_vec / np.linalg.norm(ball_vec)
     return np.dot(car_physics.forward, ball_vec_u)
 
 
-def velocity_player_to_ball(car: Car, car_physics: PhysicsObject, ball: PhysicsObject) -> float:
+def velocity_player_to_ball(car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
     norm = np.linalg.norm(car_physics.linear_velocity)
     if norm == 0:
         return 0
@@ -86,6 +94,6 @@ def velocity_player_to_ball(car: Car, car_physics: PhysicsObject, ball: PhysicsO
     return np.dot(ball_vec_u, vel_u)
 
 
-def velocity(car: Car, car_physics: PhysicsObject, ball: PhysicsObject) -> float:
+def velocity(car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
     norm = float(np.linalg.norm(car_physics.linear_velocity))
     return norm / common_values.CAR_MAX_SPEED

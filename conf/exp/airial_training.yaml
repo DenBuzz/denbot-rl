@@ -1,0 +1,38 @@
+env_config:
+
+  blue_size: 1
+  orange_size: 0
+
+  state_mutator:
+    _target_: env.state_mutators.airial_curriculum.AirialTraining
+    blue_size: 1
+    orange_size: 0
+    ball_height: 1000
+
+  obs_builder:
+    _target_: env.obs_builder.DefaultObs
+    blue_size: ${env_config.blue_size}
+    orange_size: ${env_config.orange_size}
+    pos_frequencies: 6
+
+  action_parser:
+    _target_: env.action_parser.SeerAction
+
+  reward_fn:
+    _target_: env.denbot_reward.DenBotReward
+    ball_touch: 1
+    distance_player_ball: 0.0025
+    velocity_player_to_ball: 0.00125
+    facing_ball: 0.000625
+    velocity: 0.000625
+
+  termination_cond:
+    _target_: env.termination_conditions.BallTouchTermination
+
+  truncation_conf:
+    _target_: env.terminal_condition.AnyCondition
+    conditions:
+      - _target_: env.terminal_condition.TimeoutCondition
+        timeout_seconds: 300
+      - _target_: env.terminal_condition.NoTouchTimeoutCondition
+        timeout_seconds: 10

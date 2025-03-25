@@ -4,20 +4,8 @@ from hydra import compose, initialize
 from ray.rllib.env import MultiAgentEnv
 from ray.rllib.utils.typing import MultiAgentDict
 from rlgym.rocket_league.api import GameState
-from rlgym.rocket_league.done_conditions import (
-    AnyCondition,
-    NoTouchTimeoutCondition,
-    TimeoutCondition,
-)
 from rlgym.rocket_league.rlviser import RLViserRenderer
 from rlgym.rocket_league.sim import RocketSimEngine
-
-from env.action_parsers import RepeatAction
-from env.action_parsers.seer_action import SeerActionParser
-from env.denbot_reward import DenBotReward
-from env.obs_builders import DefaultObs
-from env.state_mutators.airial_curriculum import AirialTraining
-from env.termination_conditions.ball_touch_termination import BallTouchTermination
 
 
 class RLEnv(MultiAgentEnv):
@@ -29,16 +17,14 @@ class RLEnv(MultiAgentEnv):
     def __init__(self, config):
         super().__init__()
         self.config = config
-        self.state_mutator = AirialTraining()
-        self.obs_builder = DefaultObs(num_cars=config["blue_size"] + config["orange_size"], **config["obs_builder"])
-        self.action_parser = RepeatAction(SeerActionParser())
-        self.reward_fn = DenBotReward(**config["rewards"])
-        self.termination_cond = BallTouchTermination()
-        self.truncation_cond = AnyCondition(
-            TimeoutCondition(timeout_seconds=config["timeout_seconds"]),
-            NoTouchTimeoutCondition(timeout_seconds=config["no_touch_timeout_seconds"]),
-        )
+        self.state_mutator = config["state_mutator"]
+        self.obs_builder = config["obs_builder"]
+        self.action_parser = config["action_parser"]
+        self.reward_fn = config["reward_fn"]
+        self.termination_cond = config["termination_cond"]
+        self.truncation_cond = config["truncation_cond"]
         self.renderer = RLViserRenderer()
+
         self.sim = RocketSimEngine()
         self.possible_agents = []
         for i in range(config["blue_size"]):
@@ -59,26 +45,21 @@ class RLEnv(MultiAgentEnv):
         state = self.sim.set_state(initial_state, {})
 
         agents = self.agents = self.sim.agents
-        self.obs_builder.reset(agents, state, {})
-        self.action_parser.reset(agents, state, {})
-        self.termination_cond.reset(agents, state, {})
-        self.truncation_cond.reset(agents, state, {})
-
         return self.obs_builder.build_obs(agents, state), {}
 
     def step(
         self, action_dict: MultiAgentDict
     ) -> tuple[MultiAgentDict, MultiAgentDict, MultiAgentDict, MultiAgentDict, MultiAgentDict]:
-        engine_actions = self.action_parser.parse_actions(action_dict, self.state, {})
+        engine_actions = self.action_parser.parse_actions(action_dict, self.state)
         new_state = self.sim.step(engine_actions, {})
         agents = self.agents
         obs = self.obs_builder.build_obs(agents, new_state)
-        is_terminated = self.termination_cond.is_done(agents, new_state, {})
+        is_terminated = self.termination_cond.is_done(agents, new_state)
         if all(is_terminated.values()):
             is_terminated["__all__"] = True
         else:
             is_terminated["__all__"] = False
-        is_truncated = self.truncation_cond.is_done(agents, new_state, {})
+        is_truncated = self.truncation_cond.is_done(agents, new_state)
         if all(is_truncated.values()):
             is_truncated["__all__"] = True
         else:
