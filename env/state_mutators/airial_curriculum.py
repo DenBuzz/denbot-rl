@@ -13,8 +13,8 @@ from rlgym.rocket_league.common_values import (
 from rlgym.rocket_league.sim import RocketSimEngine
 
 
-class AirialCurriculum:
-    def __init__(self, blue_size: int = 1, orange_size: int = 0, ball_height: float = BALL_RESTING_HEIGHT) -> None:
+class AirialTraining:
+    def __init__(self, blue_size: int = 1, orange_size: int = 0, ball_height: float = BALL_RESTING_HEIGHT + 50) -> None:
         self.rng = np.random.default_rng()
         self.blue_size = blue_size
         self.orange_size = orange_size
@@ -32,7 +32,7 @@ class AirialCurriculum:
             [
                 (self.rng.random() - 0.5) * 2 * (SIDE_WALL_X - 10 * BALL_RADIUS),
                 (self.rng.random() - 0.5) * 2 * (BACK_WALL_Y - 10 * BALL_RADIUS),
-                self.ball_height,
+                self.rng.uniform(BALL_RESTING_HEIGHT, self.ball_height),
             ],
             dtype=np.float32,
         )

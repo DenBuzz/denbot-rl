@@ -16,7 +16,7 @@ from env.action_parsers import RepeatAction
 from env.action_parsers.seer_action import SeerActionParser
 from env.denbot_reward import DenBotReward
 from env.obs_builders import DefaultObs
-from env.state_mutators.airial_curriculum import AirialCurriculum
+from env.state_mutators.airial_curriculum import AirialTraining
 from env.termination_conditions.ball_touch_termination import BallTouchTermination
 
 
@@ -29,7 +29,7 @@ class RLEnv(MultiAgentEnv):
     def __init__(self, config):
         super().__init__()
         self.config = config
-        self.state_mutator = AirialCurriculum()
+        self.state_mutator = AirialTraining()
         self.obs_builder = DefaultObs(num_cars=config["blue_size"] + config["orange_size"], **config["obs_builder"])
         self.action_parser = RepeatAction(SeerActionParser())
         self.reward_fn = DenBotReward(**config["rewards"])

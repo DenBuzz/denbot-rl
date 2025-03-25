@@ -19,7 +19,7 @@ from ray.rllib.utils.metrics.metrics_logger import MetricsLogger
 from ray.rllib.utils.typing import EpisodeType, PolicyID
 from rlgym.rocket_league.common_values import BALL_RESTING_HEIGHT
 
-from env.state_mutators.airial_curriculum import AirialCurriculum
+from env.state_mutators.airial_curriculum import AirialTraining
 
 
 def _remote_fn(env_runner, new_task: int):
@@ -28,7 +28,7 @@ def _remote_fn(env_runner, new_task: int):
     # env_runner.config.environment(env_config={"desc": new_task})
     # env_runner.make_env()
     for env in env_runner.env.envs:
-        env.env.state_mutator = AirialCurriculum(ball_height=BALL_RESTING_HEIGHT + 20 * new_task)
+        env.env.state_mutator = AirialTraining(ball_height=BALL_RESTING_HEIGHT + 10 + 20 * new_task)
 
 
 class AirialCurriculumCallback(RLlibCallback):
