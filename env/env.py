@@ -1,10 +1,8 @@
 from typing import Any
 
-from hydra import compose, initialize
 from ray.rllib.env import MultiAgentEnv
 from ray.rllib.utils.typing import MultiAgentDict
 from rlgym.rocket_league.api import GameState
-from rlgym.rocket_league.rlviser import RLViserRenderer
 from rlgym.rocket_league.sim import RocketSimEngine
 
 
@@ -23,7 +21,7 @@ class RLEnv(MultiAgentEnv):
         self.reward_fn = config["reward_fn"]
         self.termination_cond = config["termination_cond"]
         self.truncation_cond = config["truncation_cond"]
-        self.renderer = RLViserRenderer()
+        self.renderer = config["renderer"]
 
         self.sim = RocketSimEngine()
         self.possible_agents = []
@@ -43,6 +41,9 @@ class RLEnv(MultiAgentEnv):
         initial_state = self.sim.create_base_state()
         self.state_mutator.apply(initial_state, self.sim)
         state = self.sim.set_state(initial_state, {})
+
+        self.termination_cond.reset()
+        self.truncation_cond.reset()
 
         agents = self.agents = self.sim.agents
         return self.obs_builder.build_obs(agents, state), {}
@@ -75,10 +76,3 @@ class RLEnv(MultiAgentEnv):
         self.sim.close()
         if self.renderer is not None:
             self.renderer.close()
-
-
-def create_env():
-    with initialize(version_base=None, config_path="../conf"):
-        cfg = compose(config_name="train")
-
-    return RLEnv(cfg.algorithm.env_config)

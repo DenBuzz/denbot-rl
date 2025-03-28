@@ -18,17 +18,21 @@ class SeerAction:
     def parse_actions(self, actions: dict[str, th.Tensor], state: GameState) -> dict[str, np.ndarray]:
         parsed_actions = {}
         for agent, action in actions.items():
-            parsed_actions[agent] = np.array(
-                [
-                    self.boost[action[0]],
-                    self.steer_yaw[action[1]],
-                    self.pitch[action[2]],
-                    self.steer_yaw[action[1]],
-                    self.roll[action[3]],
-                    self.jump[action[4]],
-                    self.boost[action[5]],
-                    self.handbreak[action[6]],
-                ]
-            ).repeat(8, axis=0)
+            parsed_actions[agent] = (
+                np.array(
+                    [
+                        self.boost[action[0]],
+                        self.steer_yaw[action[1]],
+                        self.pitch[action[2]],
+                        self.steer_yaw[action[1]],
+                        self.roll[action[3]],
+                        self.jump[action[4]],
+                        self.boost[action[5]],
+                        self.handbreak[action[6]],
+                    ]
+                )
+                .reshape(1, -1)
+                .repeat(8, axis=0)
+            )
 
         return parsed_actions

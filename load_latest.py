@@ -4,6 +4,7 @@ from pathlib import Path
 from time import sleep, time
 
 import torch
+from hydra import compose, initialize
 from ray.rllib.connectors.env_to_module import EnvToModulePipeline
 from ray.rllib.connectors.module_to_env import ModuleToEnvPipeline
 from ray.rllib.core import (
@@ -18,8 +19,17 @@ from ray.rllib.core import (
 from ray.rllib.core.rl_module import RLModule
 from ray.rllib.env.multi_agent_episode import MultiAgentEpisode
 
-from conf.algorithm import mapping_fn
-from env.env import RLEnv, create_env
+from conf.build_config import build_exp_config, mapping_fn
+from env.env import RLEnv
+
+
+def create_env():
+    with initialize(version_base=None, config_path="conf"):
+        cfg = compose(config_name="train", overrides=["exp=airial"])
+
+    cfg = build_exp_config(cfg.exp)
+
+    return RLEnv(cfg.env_config)
 
 
 def get_most_recent_checkpoint() -> Path:
@@ -87,7 +97,7 @@ def run_episode(
 
 if __name__ == "__main__":
     env = create_env()
-    # env.state_mutator.ball_height = 1500
+    env.state_mutator.ball_height = 500
     while True:
         most_recent_checkpoint = get_most_recent_checkpoint()
         rl_module, env_to_module, module_to_env = load_components_from_checkpoint(most_recent_checkpoint)

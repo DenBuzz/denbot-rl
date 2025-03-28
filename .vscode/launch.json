@@ -13,7 +13,8 @@
       "request": "launch",
       "program": "train.py",
       "args": [
-        "exp=airial_training"
+        "exp=airial",
+        "resources=debug"
       ],
       "justMyCode": false,
       "type": "debugpy",

@@ -1,3 +1,4 @@
 defaults:
   - exp: ???
+  - resources: standard
   - _self_

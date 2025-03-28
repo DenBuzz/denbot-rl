@@ -1,17 +1,16 @@
-defaults: 
-  - base
-  - env_config: 1on0
-  - env_runners: sweaty
-
-training: 
+training:
   gamma: 0.99
   lambda_: 0.95
   lr: 1e-5
-  # entropy_coeff:
-  #   - [0, 0.02]
-  #   - [1.5e7, 0.001]
+  entropy_coeff: 0.01
   train_batch_size_per_learner: 8192
   num_epochs: 32
   minibatch_size: 2048
   shuffle_batch_per_epoch: True
   use_kl_loss: false
+
+rl_module:
+  model_config:
+    fcnet_hiddens: 
+      grid_search: [[256, 256], [256, 256, 256]]
+    fcnet_activation: LeakyReLU

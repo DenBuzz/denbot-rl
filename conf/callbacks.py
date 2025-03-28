@@ -31,6 +31,10 @@ def _remote_fn(env_runner, new_task: int):
         env.env.state_mutator = AirialTraining(ball_height=BALL_RESTING_HEIGHT + 10 + 20 * new_task)
 
 
+def AirialCurriculumCallbackFactory():
+    return AirialCurriculumCallback
+
+
 class AirialCurriculumCallback(RLlibCallback):
     def on_episode_end(
         self,
@@ -73,6 +77,7 @@ class AirialCurriculumCallback(RLlibCallback):
         **kwargs,
     ) -> None:
         current_task = algorithm._counters["current_task"]
+        metrics_logger.log_value("current_task", current_task, reduce="max")
         if current_task > 80:
             print("At the highest task!!!")
             return

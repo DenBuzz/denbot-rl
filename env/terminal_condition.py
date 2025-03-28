@@ -6,6 +6,10 @@ class AnyCondition:
     def __init__(self, conditions) -> None:
         self.conditions = conditions
 
+    def reset(self):
+        for cond in self.conditions:
+            cond.reset()
+
     def is_done(self, agents: list[str], state: GameState) -> dict[str, bool]:
         combined_dones = {agent: False for agent in agents}
         for condition in self.conditions:
@@ -20,6 +24,8 @@ class TimeoutCondition:
     def __init__(self, timeout_seconds: float):
         self.timeout_seconds = timeout_seconds
 
+    def reset(self): ...
+
     def is_done(self, agents: list[str], state: GameState) -> dict[str, bool]:
         time_elapsed = state.tick_count / TICKS_PER_SECOND
         done = time_elapsed >= self.timeout_seconds
@@ -29,6 +35,9 @@ class TimeoutCondition:
 class NoTouchTimeoutCondition:
     def __init__(self, timeout_seconds: float):
         self.timeout_seconds = timeout_seconds
+        self.last_touch_tick = 0
+
+    def reset(self):
         self.last_touch_tick = 0
 
     def is_done(self, agents: list[str], state: GameState) -> dict[str, bool]:
@@ -44,6 +53,8 @@ class NoTouchTimeoutCondition:
 
 class BallTouchTermination:
     """Terminate on the ball being touched"""
+
+    def reset(self): ...
 
     def is_done(self, agents: list[str], state: GameState) -> dict[str, bool]:
         return {agent: state.cars[agent].ball_touches > 0 for agent in agents}

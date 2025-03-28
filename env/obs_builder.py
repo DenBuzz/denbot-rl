@@ -21,7 +21,6 @@ class DefaultObs(ObsBuilder):
 
     def __init__(
         self,
-        num_cars=3,
         pos_frequencies=4,
         ang_coef=1 / math.pi,
         lin_vel_coef=1 / 2300,
@@ -36,21 +35,12 @@ class DefaultObs(ObsBuilder):
         self.ANG_VEL_COEF = ang_vel_coef
         self.PAD_TIMER_COEF = pad_timer_coef
         self.BOOST_COEF = boost_coef
-        self.num_cars = num_cars
 
     def get_obs_space(self, agent: str) -> gym.Space:
         return gym.spaces.Box(
             -100,
             100,
-            shape=(
-                34
-                + 3
-                + 3
-                + 9
-                + 3 * 2 * self.position_frequencies
-                + 39
-                + 3 * 2 * self.position_frequencies * self.num_cars,
-            ),
+            shape=(34 + 3 + 3 + 9 + 3 * 2 * self.position_frequencies + 39 + 3 * 2 * self.position_frequencies,),
         )
 
     def build_obs(self, agents: list[str], state: GameState) -> dict[str, np.ndarray]:
