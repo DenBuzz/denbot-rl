@@ -28,7 +28,7 @@ def _remote_fn(env_runner, new_task: int):
     # env_runner.config.environment(env_config={"desc": new_task})
     # env_runner.make_env()
     for env in env_runner.env.envs:
-        env.env.state_mutator = AirialTraining(ball_height=BALL_RESTING_HEIGHT + 10 + 20 * new_task)
+        env.env.state_mutator = AirialTraining(max_ball_height=BALL_RESTING_HEIGHT + 10 + 20 * new_task)
 
 
 def AirialCurriculumCallbackFactory():

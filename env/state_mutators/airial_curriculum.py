@@ -11,28 +11,41 @@ from rlgym.rocket_league.common_values import (
     SIDE_WALL_X,
 )
 from rlgym.rocket_league.sim import RocketSimEngine
+from scipy.stats import triang
 
 
 class AirialTraining:
-    def __init__(self, blue_size: int = 1, orange_size: int = 0, ball_height: float = BALL_RESTING_HEIGHT + 50) -> None:
+    def __init__(
+        self,
+        blue_size: int = 1,
+        orange_size: int = 0,
+        min_ball_height: float = BALL_RESTING_HEIGHT,
+        max_ball_height: float = BALL_RESTING_HEIGHT + 50,
+    ) -> None:
         self.rng = np.random.default_rng()
         self.blue_size = blue_size
         self.orange_size = orange_size
-        self.ball_height = ball_height
-        print(f"Ball height set to {ball_height}")
+        self.min_ball_height = min_ball_height
+        self.max_ball_height = max_ball_height
 
     def apply(self, state: GameState, sim: RocketSimEngine) -> None:
         # Apply no mass
         mutator_config = rsim.MutatorConfig()
         mutator_config.ball_mass = 0
         sim._arena.set_mutator_config(mutator_config)
+        ball_height = triang.rvs(
+            0.75,
+            loc=self.min_ball_height,
+            scale=self.max_ball_height - self.min_ball_height,
+            random_state=self.rng,
+        )
 
         # regular state stuff
         state.ball.position = np.array(
             [
                 (self.rng.random() - 0.5) * 2 * (SIDE_WALL_X - 10 * BALL_RADIUS),
                 (self.rng.random() - 0.5) * 2 * (BACK_WALL_Y - 10 * BALL_RADIUS),
-                self.rng.uniform(BALL_RESTING_HEIGHT, self.ball_height),
+                ball_height,
             ],
             dtype=np.float32,
         )
