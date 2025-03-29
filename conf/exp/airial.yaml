@@ -15,6 +15,7 @@ algorithm:
       obs_builder:
         _target_: env.obs_builder.DefaultObs
         pos_frequencies: 6
+        angle_frequencies: 3
 
       action_parser:
         _target_: env.action_parser.SeerAction

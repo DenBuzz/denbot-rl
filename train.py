@@ -30,7 +30,7 @@ def main(hydra_cfg: DictConfig):
             ),
             stop=TaskStopper(max_task=80),
         ),
-        tune_config=TuneConfig(num_samples=5, trial_dirname_creator=dirname_fn),
+        tune_config=TuneConfig(num_samples=3, trial_dirname_creator=dirname_fn),
     )
 
     ray.init(**hydra_cfg.ray_init)

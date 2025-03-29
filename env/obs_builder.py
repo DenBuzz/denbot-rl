@@ -2,19 +2,14 @@ import math
 
 import gymnasium as gym
 import numpy as np
+from numpy.linalg import norm
 from rlgym.rocket_league.api import Car, GameState, PhysicsObject
 from rlgym.rocket_league.common_values import BACK_WALL_Y, ORANGE_TEAM
 
 from env.encoders import encode_position, fourier_encoder
 
 
-class ObsBuilder:
-    def obs_space(self) -> gym.Space: ...
-
-    def build_obs(self, agents: list[str], state: GameState) -> dict[str, np.ndarray]: ...
-
-
-class DefaultObs(ObsBuilder):
+class DefaultObs:
     """
     The default observation builder.
     """
@@ -22,6 +17,7 @@ class DefaultObs(ObsBuilder):
     def __init__(
         self,
         pos_frequencies=4,
+        angle_frequencies=2,
         ang_coef=1 / math.pi,
         lin_vel_coef=1 / 2300,
         ang_vel_coef=1 / math.pi,
@@ -30,6 +26,7 @@ class DefaultObs(ObsBuilder):
     ):
         super().__init__()
         self.position_frequencies = pos_frequencies
+        self.angle_frequencies = angle_frequencies
         self.ANG_COEF = ang_coef
         self.LIN_VEL_COEF = lin_vel_coef
         self.ANG_VEL_COEF = ang_vel_coef
@@ -40,7 +37,17 @@ class DefaultObs(ObsBuilder):
         return gym.spaces.Box(
             -100,
             100,
-            shape=(34 + 3 + 3 + 9 + 3 * 2 * self.position_frequencies + 39 + 3 * 2 * self.position_frequencies,),
+            shape=(
+                3 * 2 * self.position_frequencies
+                + 3
+                + 3
+                + 34
+                + 9
+                + 3 * 2 * self.position_frequencies
+                + 4 * 3 * 2
+                + 4 * 3
+                + 6,
+            ),
         )
 
     def build_obs(self, agents: list[str], state: GameState) -> dict[str, np.ndarray]:
@@ -112,40 +119,36 @@ class DefaultObs(ObsBuilder):
         else:
             physics = car.physics
 
-        norm = np.linalg.norm(physics.linear_velocity)
         ball_vec = ball.position - physics.position
-        ball_vec_u = ball_vec / np.linalg.norm(ball_vec)
 
-        if norm == 0:
-            vel_ball_dot = 0
-        else:
-            vel_u = physics.linear_velocity / norm
-            vel_ball_dot = np.dot(vel_u, ball_vec_u)
+        yaw_offset = planar_angle(reference=physics.forward, normal=physics.up, target=ball_vec)
+        # Using left for pitch reference makes up positive and down negative
+        pitch_offset = planar_angle(reference=physics.forward, normal=physics.left, target=ball_vec)
 
-        pointing_ball_dot = np.dot(physics.forward, ball_vec_u)
-
-        xy_angle_offset = np.arccos(np.dot(physics.forward[:2], ball_vec_u[:2]))
-        xy_ball_angle = np.sign(np.cross(physics.forward[:2], ball_vec_u[:2])) * xy_angle_offset
-
-        ball_horizontal_dist = np.linalg.norm(ball_vec[:2])
-        vertical_offset_angle = np.arctan2(ball.position[2] - physics.position[2], ball_horizontal_dist)
+        vel_ball_xy_offset = planar_angle(
+            reference=physics.linear_velocity,
+            normal=np.array([0, 0, 1]),
+            target=ball_vec,
+        )
+        vel_ball_z_offset = planar_angle(
+            reference=physics.linear_velocity,
+            normal=np.cross(physics.linear_velocity, np.array([0, 0, 1])),
+            target=ball_vec,
+        )
 
         return np.concatenate(
             [
                 encode_position(physics.position, frequencies=self.position_frequencies),  # 3*2*freqs
-                fourier_encoder(-np.pi, np.pi, xy_ball_angle, frequencies=3, periodic=True),
-                fourier_encoder(-np.pi / 2, np.pi / 2, vertical_offset_angle, frequencies=3, periodic=False),
+                fourier_encoder(-np.pi, np.pi, yaw_offset, frequencies=self.angle_frequencies, periodic=True),
+                fourier_encoder(-np.pi, np.pi, pitch_offset, frequencies=self.angle_frequencies, periodic=True),
+                fourier_encoder(-np.pi, np.pi, vel_ball_xy_offset, frequencies=self.angle_frequencies, periodic=True),
+                fourier_encoder(-np.pi, np.pi, vel_ball_z_offset, frequencies=self.angle_frequencies, periodic=True),
                 physics.forward,
                 physics.up,
                 physics.linear_velocity * self.LIN_VEL_COEF,
                 physics.angular_velocity * self.ANG_VEL_COEF,
-                ball_vec / (2 * BACK_WALL_Y),
-                ball_vec_u,
                 [
-                    pointing_ball_dot,
-                    vel_ball_dot,
-                    ball_horizontal_dist / (2 * BACK_WALL_Y),
-                    np.linalg.norm(ball_vec) / (2 * BACK_WALL_Y),
+                    norm(ball_vec) / (2 * BACK_WALL_Y),
                     car.boost_amount * self.BOOST_COEF,
                     car.demo_respawn_timer,
                     int(car.on_ground),
@@ -154,3 +157,34 @@ class DefaultObs(ObsBuilder):
                 ],
             ]
         )
+        ###############
+        # Get the normal vector (right) to the forward/up plane
+        # Subtract from the vector to the ball the normal component dotted with that same vector
+        # That yeilds the vector projected to the forward/up plane
+
+
+def planar_angle(reference: np.ndarray, normal: np.ndarray, target: np.ndarray):
+    """Return the yaw angle between a car's foward and a unit vector"""
+    # find an subtract the normal component from the vector
+    if (x := norm(normal)) == 0:
+        return 0
+    else:
+        n = normal / x
+
+    t_proj = target - np.dot(target, n) * n
+    if (x := norm(t_proj)) == 0:
+        return 0
+    else:
+        t_proj_norm = t_proj / x
+
+    ref_proj = reference - np.dot(reference, n) * n
+    if (x := norm(ref_proj)) == 0:
+        return 0
+    else:
+        ref_proj_norm = ref_proj / x
+
+    angle = np.arccos(np.clip(np.dot(ref_proj_norm, t_proj_norm), -1, 1))
+    sign = np.sign(np.dot(np.cross(ref_proj_norm, t_proj_norm), n))
+    if sign == 0:
+        return angle
+    return angle * sign
