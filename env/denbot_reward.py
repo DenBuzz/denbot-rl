@@ -39,6 +39,8 @@ class DenBotReward:
         self.boost_amount = boost_amount
         self.forward_velocity = forward_velocity
 
+        self._previous_boost = 33
+
     def apply(self, agent: str, state: GameState) -> float:
         car = state.cars[agent]
         if car.team_num == common_values.ORANGE_TEAM:
@@ -56,6 +58,8 @@ class DenBotReward:
             + distance_player_ball(*reward_inputs) * self.distance_player_ball
             + facing_ball(*reward_inputs) * self.facing_ball
             + velocity_player_to_ball(*reward_inputs) * self.velocity_player_to_ball
+            + velocity(*reward_inputs) * self.velocity
+            + boost_amount(*reward_inputs) * self.boost_amount
         )
 
         return reward
@@ -97,3 +101,7 @@ def velocity_player_to_ball(car: Car, car_physics: PhysicsObject, ball: PhysicsO
 def velocity(car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
     norm = float(np.linalg.norm(car_physics.linear_velocity))
     return norm / common_values.CAR_MAX_SPEED
+
+
+def boost_amount(car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
+    return np.sqrt(car.boost_amount / 100)

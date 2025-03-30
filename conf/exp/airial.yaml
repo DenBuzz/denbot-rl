@@ -24,9 +24,10 @@ algorithm:
         _target_: env.denbot_reward.DenBotReward
         ball_touch: 1
         distance_player_ball: 0.0025
-        velocity_player_to_ball: 0.00125
         facing_ball: 0.000625
+        velocity_player_to_ball: 0.00125
         velocity: 0.000625
+        boost_amount: 0.00125
 
       termination_cond:
         _target_: env.terminal_condition.BallTouchTermination

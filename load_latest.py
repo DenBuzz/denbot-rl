@@ -97,7 +97,9 @@ def run_episode(
 
 if __name__ == "__main__":
     env = create_env()
-    env.state_mutator.ball_height = 1800
+    env.state_mutator.max_ball_height = 500
+    env.state_mutator.max_car_yeet = 500
+    env.state_mutator.max_car_height = 500
     while True:
         most_recent_checkpoint = get_most_recent_checkpoint()
         rl_module, env_to_module, module_to_env = load_components_from_checkpoint(most_recent_checkpoint)

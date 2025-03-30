@@ -28,7 +28,7 @@ def main(hydra_cfg: DictConfig):
                 checkpoint_frequency=20,
                 checkpoint_at_end=True,
             ),
-            stop=TaskStopper(max_task=80),
+            stop=TaskStopper(max_task=99),
         ),
         tune_config=TuneConfig(num_samples=3, trial_dirname_creator=dirname_fn),
     )
