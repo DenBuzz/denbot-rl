@@ -9,7 +9,7 @@ from rlgym.rocket_league.common_values import BACK_WALL_Y, ORANGE_TEAM
 from env.encoders import encode_position, fourier_encoder
 
 
-class DefaultObs:
+class DenbotObs:
     """
     The default observation builder.
     """
@@ -32,6 +32,8 @@ class DefaultObs:
         self.ANG_VEL_COEF = ang_vel_coef
         self.PAD_TIMER_COEF = pad_timer_coef
         self.BOOST_COEF = boost_coef
+
+    def reset(self, info: dict): ...
 
     def get_obs_space(self, agent: str) -> gym.Space:
         return gym.spaces.Box(

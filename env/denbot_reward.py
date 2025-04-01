@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 import numpy as np
 import rlgym.rocket_league.common_values as common_values
 from rlgym.rocket_league.api import Car, GameState, PhysicsObject
@@ -39,7 +41,10 @@ class DenBotReward:
         self.boost_amount = boost_amount
         self.forward_velocity = forward_velocity
 
-        self._previous_boost = 33
+        self._agent_boosts = defaultdict(float)
+
+    def reset(self, info: dict):
+        self._agent_boosts = defaultdict(float)
 
     def apply(self, agent: str, state: GameState) -> float:
         car = state.cars[agent]
@@ -50,58 +55,73 @@ class DenBotReward:
             car_phys = car.physics
             ball = state.ball
 
-        reward_inputs = (car, car_phys, ball, state)
+        reward_inputs = (agent, car, car_phys, ball, state)
 
         reward = (
-            goal_scored(*reward_inputs) * self.goal_scored
-            + ball_touch(*reward_inputs) * self.ball_touch
-            + distance_player_ball(*reward_inputs) * self.distance_player_ball
-            + facing_ball(*reward_inputs) * self.facing_ball
-            + velocity_player_to_ball(*reward_inputs) * self.velocity_player_to_ball
-            + velocity(*reward_inputs) * self.velocity
-            + boost_amount(*reward_inputs) * self.boost_amount
+            self._goal_scored(*reward_inputs) * self.goal_scored
+            + self._boost_difference(*reward_inputs) * self.boost_difference
+            + self._ball_touch(*reward_inputs) * self.ball_touch
+            + self._distance_player_ball(*reward_inputs) * self.distance_player_ball
+            + self._facing_ball(*reward_inputs) * self.facing_ball
+            + self._velocity_player_to_ball(*reward_inputs) * self.velocity_player_to_ball
+            + self._velocity(*reward_inputs) * self.velocity
+            + self._boost_amount(*reward_inputs) * self.boost_amount
         )
 
         return reward
 
+    def _goal_scored(
+        self, agent: str, car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState
+    ) -> float:
+        if state.scoring_team != car.team_num:
+            return -1
+        ball_speed_bonus = np.linalg.norm(ball.linear_velocity) / common_values.BALL_MAX_SPEED
+        return 1.0 + float(ball_speed_bonus)
 
-def goal_scored(car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
-    if state.scoring_team != car.team_num:
-        return -1
-    ball_speed_bonus = np.linalg.norm(ball.linear_velocity) / common_values.BALL_MAX_SPEED
-    return 1.0 + float(ball_speed_bonus)
+    def _boost_difference(
+        self, agent: str, car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState
+    ) -> float:
+        reward = np.sqrt(car.boost_amount / 100) - np.sqrt(self._agent_boosts[agent] / 100)
+        self._agent_boosts[agent] = car.boost_amount
+        return reward
 
+    def _distance_player_ball(
+        self, agent: str, car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState
+    ) -> float:
+        agent_dist = np.linalg.norm(car_physics.position - ball.position) - common_values.BALL_RADIUS
+        return np.exp2(-agent_dist / common_values.CAR_MAX_SPEED)
 
-def distance_player_ball(car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
-    agent_dist = np.linalg.norm(car_physics.position - ball.position) - common_values.BALL_RADIUS
-    return np.exp2(-agent_dist / common_values.CAR_MAX_SPEED)
+    def _ball_touch(
+        self, agent: str, car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState
+    ) -> float:
+        return int(car.ball_touches > 0)
 
+    def _facing_ball(
+        self, agent: str, car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState
+    ) -> float:
+        ball_vec = ball.position - car_physics.position
+        ball_vec_u = ball_vec / np.linalg.norm(ball_vec)
+        return np.dot(car_physics.forward, ball_vec_u)
 
-def ball_touch(car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
-    return int(car.ball_touches > 0)
+    def _velocity_player_to_ball(
+        self, agent: str, car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState
+    ) -> float:
+        norm = np.linalg.norm(car_physics.linear_velocity)
+        if norm == 0:
+            return 0
 
+        vel_u = car_physics.linear_velocity / norm
+        ball_vec = ball.position - car_physics.position
+        ball_vec_u = ball_vec / np.linalg.norm(ball_vec)
+        return np.dot(ball_vec_u, vel_u)
 
-def facing_ball(car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
-    ball_vec = ball.position - car_physics.position
-    ball_vec_u = ball_vec / np.linalg.norm(ball_vec)
-    return np.dot(car_physics.forward, ball_vec_u)
+    def _velocity(
+        self, agent: str, car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState
+    ) -> float:
+        norm = float(np.linalg.norm(car_physics.linear_velocity))
+        return norm / common_values.CAR_MAX_SPEED
 
-
-def velocity_player_to_ball(car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
-    norm = np.linalg.norm(car_physics.linear_velocity)
-    if norm == 0:
-        return 0
-
-    vel_u = car_physics.linear_velocity / norm
-    ball_vec = ball.position - car_physics.position
-    ball_vec_u = ball_vec / np.linalg.norm(ball_vec)
-    return np.dot(ball_vec_u, vel_u)
-
-
-def velocity(car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
-    norm = float(np.linalg.norm(car_physics.linear_velocity))
-    return norm / common_values.CAR_MAX_SPEED
-
-
-def boost_amount(car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
-    return np.sqrt(car.boost_amount / 100)
+    def _boost_amount(
+        self, agent: str, car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState
+    ) -> float:
+        return np.sqrt(car.boost_amount / 100)

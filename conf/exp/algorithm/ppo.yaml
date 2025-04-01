@@ -1,11 +1,11 @@
 training:
-  gamma: 0.99
+  gamma: 0.995
   lambda_: 0.95
   lr: 1e-5
-  entropy_coeff: 0.008
+  entropy_coeff: 0.01
   train_batch_size_per_learner: 8192
   num_epochs: 32
-  minibatch_size: 2048
+  minibatch_size: 4096
   shuffle_batch_per_epoch: True
   use_kl_loss: false
 

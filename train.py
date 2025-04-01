@@ -7,7 +7,7 @@ from ray.tune import CheckpointConfig, RunConfig, TuneConfig, Tuner
 from ray.tune.experiment.trial import Trial
 
 from conf.build_config import build_exp_config
-from conf.stoppers import TaskStopper
+from training.stoppers import CurriculumStopper
 
 
 def dirname_fn(trial: Trial):
@@ -25,12 +25,12 @@ def main(hydra_cfg: DictConfig):
             storage_path="~/src/denbot-rl/ray_results",
             checkpoint_config=CheckpointConfig(
                 num_to_keep=5,
-                checkpoint_frequency=20,
+                checkpoint_frequency=50,
                 checkpoint_at_end=True,
             ),
-            stop=TaskStopper(max_task=99),
+            stop=CurriculumStopper(),
         ),
-        tune_config=TuneConfig(num_samples=3, trial_dirname_creator=dirname_fn),
+        tune_config=TuneConfig(num_samples=1, trial_dirname_creator=dirname_fn),
     )
 
     ray.init(**hydra_cfg.ray_init)

@@ -23,9 +23,9 @@ from conf.build_config import build_exp_config, mapping_fn
 from env.env import RLEnv
 
 
-def create_env():
+def create_env(exp: str):
     with initialize(version_base=None, config_path="conf"):
-        cfg = compose(config_name="train", overrides=["exp=airial"])
+        cfg = compose(config_name="train", overrides=[f"exp={exp}"])
 
     cfg = build_exp_config(cfg.exp)
 
@@ -43,9 +43,7 @@ def get_most_recent_checkpoint() -> Path:
 
 def load_components_from_checkpoint(path) -> tuple[RLModule, EnvToModulePipeline, ModuleToEnvPipeline]:
     rl_module = RLModule.from_checkpoint(Path(path, COMPONENT_LEARNER_GROUP, COMPONENT_LEARNER, COMPONENT_RL_MODULE))
-    env_to_module = EnvToModulePipeline.from_checkpoint(
-        Path(path, COMPONENT_ENV_RUNNER, COMPONENT_ENV_TO_MODULE_CONNECTOR)
-    )
+    env_to_module = EnvToModulePipeline.from_checkpoint(Path(path, COMPONENT_ENV_RUNNER, COMPONENT_ENV_TO_MODULE_CONNECTOR))
     module_to_env = ModuleToEnvPipeline.from_checkpoint(
         Path(
             path,
@@ -65,9 +63,7 @@ def sample_action(action_dist_inputs, space):
     return action
 
 
-def run_episode(
-    env: RLEnv, rl_module: RLModule, env_to_module: EnvToModulePipeline, module_to_env: ModuleToEnvPipeline
-):
+def run_episode(env: RLEnv, rl_module: RLModule, env_to_module: EnvToModulePipeline, module_to_env: ModuleToEnvPipeline):
     obs, _ = env.reset()
     start_time = time()
     episode = MultiAgentEpisode(
@@ -82,9 +78,7 @@ def run_episode(
         shared_data = {}
         input_dict = env_to_module(episodes=[episode], rl_module=rl_module, explore=True, shared_data=shared_data)
         rl_module_out = rl_module.forward_inference(input_dict)
-        to_env = module_to_env(
-            batch=rl_module_out, episodes=[episode], rl_module=rl_module, explore=True, shared_data=shared_data
-        )
+        to_env = module_to_env(batch=rl_module_out, episodes=[episode], rl_module=rl_module, explore=True, shared_data=shared_data)
         action = to_env.pop(Columns.ACTIONS)[0]
 
         obs, reward, terminated, truncated, _ = env.step(action)
@@ -96,10 +90,8 @@ def run_episode(
 
 
 if __name__ == "__main__":
-    env = create_env()
-    env.state_mutator.max_ball_height = 500
-    env.state_mutator.max_car_yeet = 500
-    env.state_mutator.max_car_height = 500
+    env = create_env("airial")
+    env.state_mutator.max_ball_height = 1000
     while True:
         most_recent_checkpoint = get_most_recent_checkpoint()
         rl_module, env_to_module, module_to_env = load_components_from_checkpoint(most_recent_checkpoint)

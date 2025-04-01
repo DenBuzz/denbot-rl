@@ -8,21 +8,17 @@ algorithm:
       orange_size: 0
 
       state_mutator:
-        _target_: env.state_mutators.airial_curriculum.AirialTraining
+        _target_: env.state_mutators.airial.AirialState
         blue_size: ${..blue_size}
         orange_size: ${..orange_size}
 
-      obs_builder:
-        _target_: env.obs_builder.DefaultObs
+      obs:
         pos_frequencies: 6
         angle_frequencies: 3
 
-      action_parser:
-        _target_: env.action_parser.SeerAction
-
-      reward_fn:
-        _target_: env.denbot_reward.DenBotReward
+      rewards:
         ball_touch: 1
+        boost_difference: 0.1
         distance_player_ball: 0.0025
         facing_ball: 0.000625
         velocity_player_to_ball: 0.00125
@@ -35,14 +31,13 @@ algorithm:
       truncation_cond:
         _target_: env.terminal_condition.AnyCondition
         conditions:
-          - _target_: env.terminal_condition.TimeoutCondition
-            timeout_seconds: 300
+          # - _target_: env.terminal_condition.TimeoutCondition
+          #   timeout_seconds: 300
           - _target_: env.terminal_condition.NoTouchTimeoutCondition
-            timeout_seconds: 10
-
-      renderer:
-        _target_: rlgym.rocket_league.rlviser.RLViserRenderer
+            timeout_seconds: 30
 
   callbacks:
-    callbacks_class: 
-      _target_: conf.callbacks.AirialCurriculumCallbackFactory
+    episode_data:
+      _target_: training.callbacks.EpisodeData
+    airial_curriculum: 
+      _target_: training.callbacks.AirialCurriculum

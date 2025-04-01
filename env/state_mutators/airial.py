@@ -1,12 +1,13 @@
 import numpy as np
 import RocketSim as rsim
+
+# Import psutil after ray so the packaged version is used.
 from rlgym.rocket_league.api import Car, GameState, PhysicsObject
 from rlgym.rocket_league.common_values import (
     BACK_WALL_Y,
     BALL_RADIUS,
     BALL_RESTING_HEIGHT,
     BLUE_TEAM,
-    CAR_MAX_SPEED,
     OCTANE,
     ORANGE_TEAM,
     SIDE_WALL_X,
@@ -15,16 +16,16 @@ from rlgym.rocket_league.sim import RocketSimEngine
 from scipy.stats import triang
 
 
-class AirialTraining:
+class AirialState:
     def __init__(
         self,
         blue_size: int = 1,
         orange_size: int = 0,
         min_ball_height: float = BALL_RESTING_HEIGHT,
-        max_ball_height: float = BALL_RESTING_HEIGHT + 50,
-        min_car_height: float = 25,
-        max_car_height: float = 50,
-        max_car_yeet: float = CAR_MAX_SPEED / 200,
+        max_ball_height: float = 10 * BALL_RESTING_HEIGHT,
+        min_car_height: float = 34.0,
+        max_car_height: float = 10 * 34.0,
+        max_car_yeet: float = 1000,
     ) -> None:
         self.rng = np.random.default_rng()
         self.blue_size = blue_size
@@ -34,6 +35,9 @@ class AirialTraining:
         self.min_car_height = min_car_height
         self.max_car_height = max_car_height
         self.max_car_yeet = max_car_yeet
+
+    def reset(self, info: dict):
+        self._current_task = info["current_task"]
 
     def apply(self, state: GameState, sim: RocketSimEngine) -> None:
         # Apply no mass
@@ -47,7 +51,6 @@ class AirialTraining:
             random_state=self.rng,
         )
 
-        # regular state stuff
         state.ball.position = np.array(
             [
                 (self.rng.random() - 0.5) * 2 * (SIDE_WALL_X - 10 * BALL_RADIUS),
@@ -93,7 +96,7 @@ class AirialTraining:
         car.demo_respawn_timer = 0.0
         car.on_ground = False
         car.supersonic_time = 0.0
-        car.boost_amount = self.rng.uniform(0, 80)
+        car.boost_amount = 0
         car.boost_active_time = 0.0
         car.handbrake = 0.0
 

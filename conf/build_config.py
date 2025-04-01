@@ -11,6 +11,14 @@ def mapping_fn(agent_id: str, episode):
     return "denbot"
 
 
+def multi_callback(callbacks):
+    callback_list = [type(c) for c in list(callbacks.values())]
+
+    class Callback(*callback_list): ...
+
+    return Callback
+
+
 def build_exp_config(config):
     config = instantiate(config)
     algo_cfg: dict[str, Any] = OmegaConf.to_container(config.algorithm)
@@ -22,6 +30,6 @@ def build_exp_config(config):
         .learners(**algo_cfg["learners"])
         .multi_agent(policies={"denbot"}, policy_mapping_fn=mapping_fn)
         .rl_module(**algo_cfg["rl_module"])
-        .callbacks(**algo_cfg["callbacks"])
+        .callbacks(callbacks_class=multi_callback(algo_cfg["callbacks"]))
     )
     return ppo_config

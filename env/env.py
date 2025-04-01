@@ -3,7 +3,12 @@ from typing import Any
 from ray.rllib.env import MultiAgentEnv
 from ray.rllib.utils.typing import MultiAgentDict
 from rlgym.rocket_league.api import GameState
+from rlgym.rocket_league.rlviser import RLViserRenderer
 from rlgym.rocket_league.sim import RocketSimEngine
+
+from env.action_parser import SeerAction
+from env.denbot_obs import DenbotObs
+from env.denbot_reward import DenBotReward
 
 
 class RLEnv(MultiAgentEnv):
@@ -16,12 +21,13 @@ class RLEnv(MultiAgentEnv):
         super().__init__()
         self.config = config
         self.state_mutator = config["state_mutator"]
-        self.obs_builder = config["obs_builder"]
-        self.action_parser = config["action_parser"]
-        self.reward_fn = config["reward_fn"]
         self.termination_cond = config["termination_cond"]
         self.truncation_cond = config["truncation_cond"]
-        self.renderer = config["renderer"]
+
+        self.obs_builder = DenbotObs(**config["obs"])
+        self.action_parser = SeerAction(repeats=8)
+        self.reward_fn = DenBotReward(**config["rewards"])
+        self.renderer = RLViserRenderer()
 
         self.sim = RocketSimEngine()
         self.possible_agents = []
@@ -33,17 +39,22 @@ class RLEnv(MultiAgentEnv):
         self.action_spaces = {agent: self.action_parser.get_action_space(agent) for agent in self.possible_agents}
         self.observation_spaces = {agent: self.obs_builder.get_obs_space(agent) for agent in self.possible_agents}
 
+        self._shared_info = {"current_task": 0}
+
     @property
     def state(self) -> GameState:
         return self.sim.state
 
     def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None):
+        self.state_mutator.reset(self._shared_info)
+        self.reward_fn.reset(self._shared_info)
+        self.termination_cond.reset(self._shared_info)
+        self.truncation_cond.reset(self._shared_info)
+        self.obs_builder.reset(self._shared_info)
+
         initial_state = self.sim.create_base_state()
         self.state_mutator.apply(initial_state, self.sim)
         state = self.sim.set_state(initial_state, {})
-
-        self.termination_cond.reset()
-        self.truncation_cond.reset()
 
         agents = self.agents = self.sim.agents
         return self.obs_builder.build_obs(agents, state), {}
@@ -71,6 +82,12 @@ class RLEnv(MultiAgentEnv):
     def render(self) -> Any:
         self.renderer.render(self.state, {})
         return True
+
+    def get_task(self) -> int:
+        return self._shared_info["current_task"]
+
+    def set_task(self, task: int) -> None:
+        self._shared_info["current_task"] = task
 
     def close(self) -> None:
         self.sim.close()
