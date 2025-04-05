@@ -9,11 +9,35 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "Debug train",
+      "name": "Debug train airial",
       "request": "launch",
       "program": "train.py",
       "args": [
         "exp=airial",
+        "resources=debug"
+      ],
+      "justMyCode": false,
+      "type": "debugpy",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Debug train boost gather",
+      "request": "launch",
+      "program": "train.py",
+      "args": [
+        "exp=boost_gather",
+        "resources=debug"
+      ],
+      "justMyCode": false,
+      "type": "debugpy",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Debug train 1v0",
+      "request": "launch",
+      "program": "train.py",
+      "args": [
+        "exp=1v0",
         "resources=debug"
       ],
       "justMyCode": false,

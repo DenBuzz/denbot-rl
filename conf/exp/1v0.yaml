@@ -1,0 +1,8 @@
+defaults:
+  - base
+
+curriculum:
+  - 1v0
+
+algorithm:
+  callbacks: {}

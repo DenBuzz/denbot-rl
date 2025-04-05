@@ -17,6 +17,7 @@ dependencies = [
   "rlgym[all]>=2.0.0",
   "rocketsim>=2.1.1.post1",
   "ruff>=0.11.0",
+  "streamlit>=1.44.1",
   "tensorboard>=2.19.0",
   "torch>=2.6.0",
 ]

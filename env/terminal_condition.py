@@ -58,3 +58,21 @@ class BallTouchTermination:
 
     def is_done(self, agents: list[str], state: GameState) -> dict[str, bool]:
         return {agent: state.cars[agent].ball_touches > 0 for agent in agents}
+
+
+class FullBoost:
+    def reset(self, info: dict): ...
+
+    def is_done(self, agents: list[str], state: GameState) -> dict[str, bool]:
+        return {agent: state.cars[agent].boost_amount >= 100 for agent in agents}
+
+
+class GoalCondition:
+    """
+    A DoneCondition that is satisfied when a goal is scored.
+    """
+
+    def reset(self, info: dict) -> None: ...
+
+    def is_done(self, agents: list[str], state: GameState) -> dict[str, bool]:
+        return {agent: state.goal_scored for agent in agents}

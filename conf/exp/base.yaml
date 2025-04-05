@@ -1,2 +1,6 @@
 defaults:
   - algorithm: ppo
+  - env_configs/configs
+
+algorithm:
+  environment: {}

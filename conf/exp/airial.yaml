@@ -1,41 +1,10 @@
 defaults:
   - base
 
+curriculum:
+  - airial
+
 algorithm:
-  environment:
-    env_config:
-      blue_size: 1
-      orange_size: 0
-
-      state_mutator:
-        _target_: env.state_mutators.airial.AirialState
-        blue_size: ${..blue_size}
-        orange_size: ${..orange_size}
-
-      obs:
-        pos_frequencies: 6
-        angle_frequencies: 3
-
-      rewards:
-        ball_touch: 1
-        boost_difference: 0.1
-        distance_player_ball: 0.0025
-        facing_ball: 0.000625
-        velocity_player_to_ball: 0.00125
-        velocity: 0.000625
-        boost_amount: 0.00125
-
-      termination_cond:
-        _target_: env.terminal_condition.BallTouchTermination
-
-      truncation_cond:
-        _target_: env.terminal_condition.AnyCondition
-        conditions:
-          # - _target_: env.terminal_condition.TimeoutCondition
-          #   timeout_seconds: 300
-          - _target_: env.terminal_condition.NoTouchTimeoutCondition
-            timeout_seconds: 30
-
   callbacks:
     episode_data:
       _target_: training.callbacks.EpisodeData

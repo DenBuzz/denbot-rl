@@ -1,8 +1,10 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from rlgym.rocket_league.api import PhysicsObject
 
-from env.obs_builder import planar_angle
+import env.denbot_obs as obs
+import env.encoders as encoders
 
 
 @pytest.fixture
@@ -38,7 +40,7 @@ def default_car():
 def test_yaw_angles(default_car, v, expected):
     ref = default_car.forward
     norm = default_car.up
-    assert np.isclose(planar_angle(ref, norm, np.array(v)), expected)
+    assert np.isclose(encoders.planar_angle(ref, norm, np.array(v)), expected)
 
 
 @pytest.mark.parametrize(
@@ -59,12 +61,18 @@ def test_yaw_angles(default_car, v, expected):
 def test_pitch_angles(default_car, v, expected):
     ref = default_car.forward
     norm = default_car.left
-    assert np.isclose(planar_angle(ref, norm, np.array(v)), expected)
+    assert np.isclose(encoders.planar_angle(ref, norm, np.array(v)), expected)
 
 
-# def test_planar():
-#     r = np.array([-0.6537304, 0.7480598, 0.1142068])
-#     n = np.array([-0.7456911, -0.6624989, 0.07099336])
-#     t = np.array([-2030.0193, -5929.5356, 31.78704])
-#
-#     assert planar_angle(r, n, t) > 100
+def test_fourier_encoder():
+    x_min, x_max = -np.pi / 2, np.pi / 2
+    x = np.linspace(-np.pi / 2, np.pi / 2, 5000)
+    feats = obs.fourier_encoder(x_min, x_max, x, 3, periodic=False)
+    fig = plt.figure()
+    ax = fig.add_subplot()
+    ax.plot(x, feats)
+    plt.show()
+
+
+def test_binary_encoding():
+    assert np.all(np.array([1, 1, 1, 0, 0]) == obs.binary_encoder(10, 10 + 31, 10 + 7, num_bins=5))

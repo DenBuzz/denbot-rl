@@ -1,0 +1,28 @@
+1v0:
+  blue_size: 1
+  orange_size: 0
+
+  state_mutator:
+    _target_: env.state_mutators.random.Random
+
+  rewards:
+    goal_scored: 1
+    ball_touch: 0.1
+    boost_collect: 0.1
+    distance_player_ball: 0.0025
+    distance_ball_goal: 0.0025
+    facing_ball: 0.000625
+    velocity_player_to_ball: 0.00125
+    velocity: 0.000625
+    boost_amount: 0.00125
+
+  termination_cond:
+    _target_: env.terminal_condition.GoalCondition
+
+  truncation_cond:
+    _target_: env.terminal_condition.AnyCondition
+    conditions:
+      - _target_: env.terminal_condition.TimeoutCondition
+        timeout_seconds: 60
+      - _target_: env.terminal_condition.NoTouchTimeoutCondition
+        timeout_seconds: 10

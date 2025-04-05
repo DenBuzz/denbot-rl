@@ -1,0 +1,10 @@
+defaults:
+  - base
+
+curriculum:
+  - boost_gather
+
+algorithm:
+  callbacks: {}
+    # episode_data:
+    #   _target_: training.callbacks.EpisodeData

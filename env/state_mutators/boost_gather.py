@@ -1,5 +1,4 @@
 import numpy as np
-import RocketSim as rsim
 
 # Import psutil after ray so the packaged version is used.
 from rlgym.rocket_league.api import Car, GameState, PhysicsObject
@@ -13,16 +12,13 @@ from rlgym.rocket_league.common_values import (
     SIDE_WALL_X,
 )
 from rlgym.rocket_league.sim import RocketSimEngine
-from scipy.stats import triang
 
 
-class AirialState:
+class BoostGather:
     def __init__(
         self,
         blue_size: int = 1,
         orange_size: int = 0,
-        min_ball_height: float = BALL_RESTING_HEIGHT,
-        max_ball_height: float = 10 * BALL_RESTING_HEIGHT,
         min_car_height: float = 34.0,
         max_car_height: float = 10 * 34.0,
         max_car_yeet: float = 1000,
@@ -30,8 +26,6 @@ class AirialState:
         self.rng = np.random.default_rng()
         self.blue_size = blue_size
         self.orange_size = orange_size
-        self.min_ball_height = min_ball_height
-        self.max_ball_height = max_ball_height
         self.min_car_height = min_car_height
         self.max_car_height = max_car_height
         self.max_car_yeet = max_car_yeet
@@ -40,28 +34,9 @@ class AirialState:
 
     def apply(self, state: GameState, sim: RocketSimEngine) -> None:
         # Apply no mass
-        mutator_config = rsim.MutatorConfig()
-        mutator_config.ball_mass = 0
-        sim._arena.set_mutator_config(mutator_config)
-        ball_height = triang.rvs(
-            0.75,
-            loc=self.min_ball_height,
-            scale=self.max_ball_height - self.min_ball_height,
-            random_state=self.rng,
-        )
-
-        state.ball.position = np.array(
-            [
-                (self.rng.random() - 0.5) * 2 * (SIDE_WALL_X - 10 * BALL_RADIUS),
-                (self.rng.random() - 0.5) * 2 * (BACK_WALL_Y - 10 * BALL_RADIUS),
-                ball_height,
-            ],
-            dtype=np.float32,
-        )
+        state.ball.position = np.array([0, 0, BALL_RESTING_HEIGHT], dtype=np.float32)
         state.ball.angular_velocity = np.zeros(3, dtype=np.float32)
         state.ball.linear_velocity = np.zeros(3, dtype=np.float32)
-
-        assert len(state.cars) == 0  # This mutator doesn't support other team size mutators
 
         for idx in range(self.blue_size):
             car = self._new_car()

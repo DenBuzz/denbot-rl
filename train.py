@@ -25,7 +25,7 @@ def main(hydra_cfg: DictConfig):
             storage_path="~/src/denbot-rl/ray_results",
             checkpoint_config=CheckpointConfig(
                 num_to_keep=5,
-                checkpoint_frequency=50,
+                checkpoint_frequency=20,
                 checkpoint_at_end=True,
             ),
             stop=CurriculumStopper(),

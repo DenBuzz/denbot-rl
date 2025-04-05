@@ -90,8 +90,8 @@ def run_episode(env: RLEnv, rl_module: RLModule, env_to_module: EnvToModulePipel
 
 
 if __name__ == "__main__":
-    env = create_env("airial")
-    env.state_mutator.max_ball_height = 1000
+    env = create_env("1v0")
+    # env.state_mutator.max_ball_height = 355
     while True:
         most_recent_checkpoint = get_most_recent_checkpoint()
         rl_module, env_to_module, module_to_env = load_components_from_checkpoint(most_recent_checkpoint)

@@ -1,3 +1,5 @@
+from typing import Any
+
 import gymnasium as gym
 import numpy as np
 from ray.rllib.algorithms import Algorithm
@@ -22,7 +24,6 @@ from rlgym.rocket_league.common_values import (
     CEILING_Z,
 )
 
-from env.denbot_reward import DenBotReward
 from env.state_mutators.airial import AirialState
 
 
@@ -65,8 +66,7 @@ class EpisodeData(RLlibCallback):
 
 
 class AirialCurriculum(RLlibCallback):
-    CURRICULUM_STEPS = 100
-    BOOST_REWARD_STEPS = 50
+    CURRICULUM_STEPS = 50
 
     BALL_START_HEIGHT = BALL_RESTING_HEIGHT + 2
     BALL_HEIGHT_STEP = ((CEILING_Z - BALL_RADIUS) - BALL_START_HEIGHT) / CURRICULUM_STEPS
@@ -80,24 +80,19 @@ class AirialCurriculum(RLlibCallback):
     BOOST_END_REWARD = 0.1
 
     def on_algorithm_init(self, *, algorithm: "Algorithm", metrics_logger: MetricsLogger | None = None, **kwargs) -> None:
-        new_task = 0
+        current_task = 7
+        algorithm._counters["current_task"] = current_task
 
         def _remote_fn(env_runner):
             for env in env_runner.env.envs:
-                env.env.set_task(new_task)
+                env.env.set_task(current_task)
                 airial_state: AirialState = env.env.state_mutator
-                reward_fn: DenBotReward = env.env.reward_fn
 
-                airial_state.max_ball_height = self.BALL_START_HEIGHT + new_task * self.BALL_HEIGHT_STEP
-                airial_state.max_car_height = self.CAR_START_HEIGHT + new_task * self.CAR_HEIGHT_STEP
-                airial_state.max_car_yeet = 1 + new_task * self.CAR_YEET_STEP
-                reward_fn.boost_difference = np.clip(
-                    1 - (new_task / self.BOOST_REWARD_STEPS) * (self.BOOST_START_REWARD - self.BOOST_END_REWARD),
-                    0.1,
-                    1,
-                )
+                airial_state.max_ball_height = self.BALL_START_HEIGHT + current_task * self.BALL_HEIGHT_STEP
+                airial_state.max_car_height = self.CAR_START_HEIGHT + current_task * self.CAR_HEIGHT_STEP
+                airial_state.max_car_yeet = 1 + current_task * self.CAR_YEET_STEP
 
-        print(f"Switching task on all EnvRunners to #{new_task}")
+        print(f"Switching task on all EnvRunners to #{current_task}")
         algorithm.env_runner_group.foreach_env_runner(func=_remote_fn)
         return super().on_algorithm_init(algorithm=algorithm, metrics_logger=metrics_logger, **kwargs)
 
@@ -121,19 +116,24 @@ class AirialCurriculum(RLlibCallback):
         if current_touches > 0.95:
             new_task = current_task + 1
 
-            new_boost_reward = np.clip(1 - (new_task / self.BOOST_REWARD_STEPS) * (self.BOOST_START_REWARD - self.BOOST_END_REWARD), 0.1, 1)
-
             def _remote_fn(env_runner):
                 for env in env_runner.env.envs:
                     env.env.set_task(new_task)
                     airial_state: AirialState = env.env.state_mutator
-                    reward_fn: DenBotReward = env.env.reward_fn
 
                     airial_state.max_ball_height = self.BALL_START_HEIGHT + new_task * self.BALL_HEIGHT_STEP
                     airial_state.max_car_height = self.CAR_START_HEIGHT + new_task * self.CAR_HEIGHT_STEP
                     airial_state.max_car_yeet = 1 + new_task * self.CAR_YEET_STEP
-                    reward_fn.boost_difference = new_boost_reward
 
             print(f"Switching task on all EnvRunners to #{new_task}")
             algorithm.env_runner_group.foreach_env_runner(func=_remote_fn)
             algorithm._counters["current_task"] = new_task
+
+
+class Curriculum(RLlibCallback):
+    def __init__(self, env_configs: dict[str, Any], curriculum) -> None:
+        self.env_configs = env_configs
+        self.curriculum = curriculum
+
+    def get_new_task(self, results: dict[str, Any]):
+        return self.env_configs[self.curriculum]

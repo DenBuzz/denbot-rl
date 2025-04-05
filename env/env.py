@@ -24,7 +24,7 @@ class RLEnv(MultiAgentEnv):
         self.termination_cond = config["termination_cond"]
         self.truncation_cond = config["truncation_cond"]
 
-        self.obs_builder = DenbotObs(**config["obs"])
+        self.obs_builder = DenbotObs()
         self.action_parser = SeerAction(repeats=8)
         self.reward_fn = DenBotReward(**config["rewards"])
         self.renderer = RLViserRenderer()
@@ -39,7 +39,7 @@ class RLEnv(MultiAgentEnv):
         self.action_spaces = {agent: self.action_parser.get_action_space(agent) for agent in self.possible_agents}
         self.observation_spaces = {agent: self.obs_builder.get_obs_space(agent) for agent in self.possible_agents}
 
-        self._shared_info = {"current_task": 0}
+        self._shared_info = {}
 
     @property
     def state(self) -> GameState:
@@ -59,9 +59,7 @@ class RLEnv(MultiAgentEnv):
         agents = self.agents = self.sim.agents
         return self.obs_builder.build_obs(agents, state), {}
 
-    def step(
-        self, action_dict: MultiAgentDict
-    ) -> tuple[MultiAgentDict, MultiAgentDict, MultiAgentDict, MultiAgentDict, MultiAgentDict]:
+    def step(self, action_dict: MultiAgentDict) -> tuple[MultiAgentDict, MultiAgentDict, MultiAgentDict, MultiAgentDict, MultiAgentDict]:
         engine_actions = self.action_parser.parse_actions(action_dict, self.state)
         new_state = self.sim.step(engine_actions, {})
         agents = self.agents

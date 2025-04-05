@@ -1,16 +1,17 @@
 training:
   gamma: 0.995
   lambda_: 0.95
-  lr: 1e-5
+  lr: 2e-5
   entropy_coeff: 0.01
   train_batch_size_per_learner: 8192
   num_epochs: 32
-  minibatch_size: 4096
+  minibatch_size: 1024
   shuffle_batch_per_epoch: True
   use_kl_loss: false
 
 rl_module:
   model_config:
+    load_state_path: /home/denbuzz/src/denbot-rl/ray_results/denbot_1on0/2025-04-05-09-53-54-2cf43_00000/checkpoint_000036/learner_group/learner/rl_module
     fcnet_hiddens: [256, 256]
       # grid_search: [[256, 256], [256, 256, 256]]
     fcnet_activation: LeakyReLU
