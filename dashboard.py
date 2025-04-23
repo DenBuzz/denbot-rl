@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 import streamlit as st
+
 from conf.build_config import load_configs
 from env.env import RLEnv
 from load_latest import load_components_from_checkpoint, run_episode
@@ -28,7 +29,7 @@ def play_episode(env_config, checkpoint_path):
     rl_module, env_to_module, module_to_env = load_components_from_checkpoint(Path(checkpoint_path).absolute())
     env = RLEnv(config=env_config)
     run_episode(env, rl_module, env_to_module, module_to_env)
-    env.close()
+    # env.close()
 
 
 st.title("DenBot Dashboard")

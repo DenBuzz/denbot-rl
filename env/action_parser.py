@@ -36,3 +36,22 @@ class SeerAction:
             )
 
         return parsed_actions
+
+
+class SeerContinuousAction:
+    def __init__(self, repeats: int = 8):
+        self.repeats = repeats
+
+    def get_action_space(self, agent: str) -> gym.Space:
+        return gym.spaces.Box(-1, 1, shape=(7,))
+
+    def parse_actions(self, actions: dict[str, np.ndarray], state: GameState) -> dict[str, np.ndarray]:
+        parsed_actions = {}
+        for agent, action in actions.items():
+            # Apply the steer action to yaw as well
+            action = np.insert(action, 3, action[1])
+            # Convert floats to bools for jump boost and handbreak
+            action[-3:] = action[-3:] > 0
+            parsed_actions[agent] = action.reshape(1, -1).repeat(8, axis=0)
+
+        return parsed_actions

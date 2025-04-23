@@ -1,0 +1,44 @@
+training:
+  gamma: 0.995
+  # train_batch_size_per_learner: 1024
+
+  twin_q: True
+  # q_model_config:
+  # policy_model_config:
+  tau: 5e-3
+  initial_alpha: 2e-5
+  target_entropy: "auto"
+  n_step: 1
+  store_buffer_in_checkpoints: False
+  replay_buffer_config:
+    type: MultiAgentPrioritizedEpisodeReplayBuffer
+    # Size of the replay buffer. Note that if async_updates is set,
+    # then each worker will have a replay buffer of this size.
+    capacity: 5e5
+    alpha: 0.6
+    # Beta parameter for sampling from prioritized replay buffer.
+    beta: 0.4
+  training_intensity: 3
+  clip_actions: null
+  grad_clip: null
+  optimization_config:
+    actor_learning_rate: 3e-4
+    critic_learning_rate: 3e-4
+    entropy_learning_rate: 3e-4
+  actor_lr: 3e-5
+  critic_lr: 3e-4
+  alpha_lr: 3e-4
+  target_network_update_freq: 1
+  # _deterministic_loss: False
+  # _use_beta_distribution: False
+  num_steps_sampled_before_learning_starts: 1500
+
+env_runners:
+  rollout_fragment_length: 1
+
+
+rl_module:
+  model_config:
+    fcnet_hiddens: [256, 256]
+      # grid_search: [[256, 256], [256, 256, 256]]
+    fcnet_activation: LeakyReLU

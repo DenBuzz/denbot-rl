@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from rlgym.rocket_league.api import GameState
 from rlgym.rocket_league.common_values import TICKS_PER_SECOND
 
@@ -60,11 +62,51 @@ class BallTouchTermination:
         return {agent: state.cars[agent].ball_touches > 0 for agent in agents}
 
 
+class BallMinHeight:
+    """Terminate on the ball dropping below given height"""
+
+    def __init__(self, height: float, delay: float = 1.0):
+        self.height = height
+        self.delay = delay
+
+    def reset(self, info: dict): ...
+
+    def is_done(self, agents: list[str], state: GameState) -> dict[str, bool]:
+        if state.tick_count / TICKS_PER_SECOND < self.delay:
+            return {agent: False for agent in agents}
+        return {agent: state.ball.position[2] < self.height for agent in agents}
+
+
+class MaxTouches:
+    """Terminate on the ball being touched too much"""
+
+    def __init__(self, touches: int):
+        self.touches = touches
+        self.car_touches = defaultdict(int)
+
+    def reset(self, info: dict):
+        self.car_touches = defaultdict(int)
+
+    def is_done(self, agents: list[str], state: GameState) -> dict[str, bool]:
+        for agent in agents:
+            if state.cars[agent].ball_touches > 0:
+                self.car_touches[agent] += 1
+        return {agent: self.car_touches[agent] > self.touches for agent in agents}
+
+
 class FullBoost:
     def reset(self, info: dict): ...
 
     def is_done(self, agents: list[str], state: GameState) -> dict[str, bool]:
         return {agent: state.cars[agent].boost_amount >= 100 for agent in agents}
+
+
+class NegativeY:
+    def reset(self, info: dict): ...
+
+    def is_done(self, agents: list[str], state: GameState) -> dict[str, bool]:
+        done = state.ball.linear_velocity[1] < 0
+        return {agent: done for agent in agents}
 
 
 class GoalCondition:

@@ -1,0 +1,35 @@
+defaults:
+  - envs/1v0
+  - envs/airial
+  - envs/air_dribble
+  - envs/boost_gather
+  - envs/half_flip
+  - envs/shooting
+  - envs/ball_hunt
+
+curriculum:
+  envs:
+    airial:
+      start: 0
+      max: 100
+      metric:
+        key: airial_ball_touched
+        value: 0.9
+    shooting:
+      start: 0
+      max: 50
+      metric:
+        key: shooting_goal_scored
+        value: 0.9
+    ball_hunt:
+      start: 0
+      max: 10
+      metric:
+        key: ball_hunt_ball_touched
+        value: 0.8
+    air_dribble:
+      start: 0
+      max: 1
+      metric:
+        key: air_dribble_goal_scored
+        value: 1

@@ -4,7 +4,7 @@ defaults:
 env_config:
   curriculum:
     tasks:
-      - envs: [airial]
+      - envs: [ball_hunt]
 
 algorithm:
   callbacks:

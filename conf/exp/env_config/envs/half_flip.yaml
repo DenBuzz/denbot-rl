@@ -1,17 +1,13 @@
-airial:
-  blue_size: 1
-  orange_size: 0
+half_flip:
 
   state_mutator:
-    _target_: env.state_mutators.airial.AirialState
-    blue_size: ${..blue_size}
-    orange_size: ${..orange_size}
+    _target_: env.state_mutators.half_flip.HalfFlip
 
   rewards:
     ball_touch: 1
     boost_collect: 0.1
     distance_player_ball: 0.0025
-    facing_ball: 0.000625
+    facing_ball: 0.00125
     velocity_player_to_ball: 0.00125
     velocity: 0.000625
     boost_amount: 0.00125
@@ -22,7 +18,5 @@ airial:
   truncation_cond:
     _target_: env.terminal_condition.AnyCondition
     conditions:
-      # - _target_: env.terminal_condition.TimeoutCondition
-      #   timeout_seconds: 300
       - _target_: env.terminal_condition.NoTouchTimeoutCondition
-        timeout_seconds: 30
+        timeout_seconds: 5

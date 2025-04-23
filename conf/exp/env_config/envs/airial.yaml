@@ -1,0 +1,26 @@
+airial:
+
+  state_mutator:
+    _target_: env.state_mutators.airial.AirialState
+    blue_size: 1
+    orange_size: 0
+
+  rewards:
+    ball_touch: 1
+    boost_collect: 0.1
+    distance_player_ball: 0.0025
+    facing_ball: 0.000625
+    velocity_player_to_ball: 0.00125
+    velocity: 0.0025
+    boost_amount: 0.00125
+    boost_proximity: 0.00125
+
+  termination_cond:
+    _target_: env.terminal_condition.BallTouchTermination
+
+  truncation_cond:
+    _target_: env.terminal_condition.AnyCondition
+    conditions:
+      - _target_: env.terminal_condition.NoTouchTimeoutCondition
+        timeout_seconds: 20
+

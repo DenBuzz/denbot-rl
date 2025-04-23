@@ -6,6 +6,12 @@ from rlgym.rocket_league.api import Car, GameState, PhysicsObject
 
 
 class DenBotReward:
+    BOOST_LOCATIONS = np.array(cv.BOOST_LOCATIONS)
+
+    big_pad_indices = [3, 4, 15, 18, 29, 30]
+    PAD_AMOUNTS = 12 * np.ones(BOOST_LOCATIONS.shape[0])
+    PAD_AMOUNTS[big_pad_indices] = 100
+
     def __init__(
         self,
         goal_scored: float = 0,
@@ -14,6 +20,7 @@ class DenBotReward:
         ball_touch: float = 0,
         demo: float = 0,
         distance_player_ball: float = 0,
+        offensive_angle: float = 0,
         distance_ball_goal: float = 0,
         facing_ball: float = 0,
         align_ball_goal: float = 0,
@@ -21,8 +28,10 @@ class DenBotReward:
         touched_last: float = 0,
         behind_ball: float = 0,
         velocity_player_to_ball: float = 0,
+        velocity_ball_goal: float = 0,
         velocity: float = 0,
         boost_amount: float = 0,
+        boost_proximity: float = 0,
         forward_velocity: float = 0,
     ) -> None:
         self.goal_scored = goal_scored
@@ -32,6 +41,7 @@ class DenBotReward:
         self.demo = demo
 
         self.distance_player_ball = distance_player_ball
+        self.offensive_angle = offensive_angle
         self.distance_ball_goal = distance_ball_goal
         self.facing_ball = facing_ball
         self.align_ball_goal = align_ball_goal
@@ -39,14 +49,40 @@ class DenBotReward:
         self.touched_last = touched_last
         self.behind_ball = behind_ball
         self.velocity_player_to_ball = velocity_player_to_ball
+        self.velocity_ball_goal = velocity_ball_goal
         self.velocity = velocity
         self.boost_amount = boost_amount
+        self.boost_proximity = boost_proximity
         self.forward_velocity = forward_velocity
 
         self._agent_boosts = defaultdict(float)
+        self.reward_weights = np.array(
+            [
+                goal_scored,
+                boost_collect,
+                full_boost,
+                ball_touch,
+                demo,
+                distance_player_ball,
+                offensive_angle,
+                distance_ball_goal,
+                facing_ball,
+                align_ball_goal,
+                closest_to_ball,
+                touched_last,
+                behind_ball,
+                velocity_player_to_ball,
+                velocity_ball_goal,
+                velocity,
+                boost_amount,
+                boost_proximity,
+                forward_velocity,
+            ]
+        )
 
     def reset(self, info: dict):
         self._agent_boosts = defaultdict(float)
+        info["reward_weights"] = self.reward_weights
 
     def apply(self, agent: str, state: GameState) -> float:
         car = state.cars[agent]
@@ -65,10 +101,13 @@ class DenBotReward:
             + self._full_boost(*reward_inputs) * self.full_boost
             + self._ball_touch(*reward_inputs) * self.ball_touch
             + self._distance_player_ball(*reward_inputs) * self.distance_player_ball
+            + self._offensive_angle(*reward_inputs) * self.offensive_angle
             + self._facing_ball(*reward_inputs) * self.facing_ball
             + self._velocity_player_to_ball(*reward_inputs) * self.velocity_player_to_ball
+            + self._velocity_ball_goal(*reward_inputs) * self.velocity_ball_goal
             + self._velocity(*reward_inputs) * self.velocity
             + self._boost_amount(*reward_inputs) * self.boost_amount
+            + self._boost_proximity(*reward_inputs) * self.boost_proximity
         )
 
         self._agent_boosts[agent] = car.boost_amount
@@ -94,6 +133,12 @@ class DenBotReward:
         agent_dist = np.linalg.norm(car_physics.position - ball.position) - cv.BALL_RADIUS
         return np.exp2(-agent_dist / cv.CAR_MAX_SPEED)
 
+    def _offensive_angle(self, agent: str, car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
+        goal_vec = ball.position[:2] - cv.ORANGE_GOAL_BACK[:2]
+        car_vec = car_physics.position[:2] - ball.position[:2]
+        foo = np.dot(car_vec / np.linalg.norm(car_vec), goal_vec / np.linalg.norm(goal_vec))
+        return foo
+
     def _distance_ball_goal(self, agent: str, car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
         back_net = np.array([0, cv.BACK_NET_Y, cv.GOAL_HEIGHT / 2])
         ball_goal_distance = np.linalg.norm(back_net - ball.position)
@@ -117,9 +162,26 @@ class DenBotReward:
         ball_vec_u = ball_vec / np.linalg.norm(ball_vec)
         return np.dot(ball_vec_u, vel_u)
 
+    def _velocity_ball_goal(self, agent: str, car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
+        norm = np.linalg.norm(ball.linear_velocity)
+        if norm == 0:
+            return 0
+
+        vel_u = ball.linear_velocity / norm
+        goal_vec = cv.ORANGE_GOAL_BACK - ball.position
+        goal_vec_u = goal_vec / np.linalg.norm(goal_vec)
+        return np.dot(goal_vec_u, vel_u)
+
     def _velocity(self, agent: str, car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
         norm = float(np.linalg.norm(car_physics.linear_velocity))
         return norm / cv.CAR_MAX_SPEED
 
     def _boost_amount(self, agent: str, car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
         return np.sqrt(car.boost_amount / 100)
+
+    def _boost_proximity(self, agent: str, car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
+        timer_mask = state.boost_pad_timers == 0
+        distances = np.linalg.norm(self.BOOST_LOCATIONS[:, :2] - car_physics.position[:2], axis=1)
+        rewards = timer_mask * self.PAD_AMOUNTS / 100 * np.exp(-0.003 * distances)
+
+        return np.sum(rewards)

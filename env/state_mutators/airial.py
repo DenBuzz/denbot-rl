@@ -1,28 +1,28 @@
 import numpy as np
+import rlgym.rocket_league.common_values as cv
 import RocketSim as rsim
-
-# Import psutil after ray so the packaged version is used.
 from rlgym.rocket_league.api import Car, GameState, PhysicsObject
-from rlgym.rocket_league.common_values import (
-    BACK_WALL_Y,
-    BALL_RADIUS,
-    BALL_RESTING_HEIGHT,
-    BLUE_TEAM,
-    OCTANE,
-    ORANGE_TEAM,
-    SIDE_WALL_X,
-)
 from rlgym.rocket_league.sim import RocketSimEngine
 from scipy.stats import triang
 
 
 class AirialState:
+    CURRICULUM_STEPS = 100
+
+    BALL_START_HEIGHT = cv.BALL_RESTING_HEIGHT + 35
+    BALL_HEIGHT_STEP = ((cv.CEILING_Z - cv.BALL_RADIUS) - BALL_START_HEIGHT) / CURRICULUM_STEPS
+
+    CAR_START_HEIGHT = 34
+    CAR_HEIGHT_STEP = ((cv.CEILING_Z - 4 * cv.BALL_RADIUS) - CAR_START_HEIGHT) / CURRICULUM_STEPS
+
+    CAR_YEET_STEP = (cv.CAR_MAX_SPEED - 500) / CURRICULUM_STEPS
+
     def __init__(
         self,
         blue_size: int = 1,
         orange_size: int = 0,
-        min_ball_height: float = BALL_RESTING_HEIGHT,
-        max_ball_height: float = 10 * BALL_RESTING_HEIGHT,
+        min_ball_height: float = cv.BALL_RESTING_HEIGHT,
+        max_ball_height: float = 10 * cv.BALL_RESTING_HEIGHT,
         min_car_height: float = 34.0,
         max_car_height: float = 10 * 34.0,
         max_car_yeet: float = 1000,
@@ -36,7 +36,11 @@ class AirialState:
         self.max_car_height = max_car_height
         self.max_car_yeet = max_car_yeet
 
-    def reset(self, info: dict): ...
+    def reset(self, info: dict):
+        task = info.get("task", 0)
+        self.max_ball_height = self.BALL_START_HEIGHT + task * self.BALL_HEIGHT_STEP
+        self.max_car_height = self.CAR_START_HEIGHT + task * self.CAR_HEIGHT_STEP
+        self.max_car_yeet = 1 + task * self.CAR_YEET_STEP
 
     def apply(self, state: GameState, sim: RocketSimEngine) -> None:
         # Apply no mass
@@ -52,8 +56,8 @@ class AirialState:
 
         state.ball.position = np.array(
             [
-                (self.rng.random() - 0.5) * 2 * (SIDE_WALL_X - 10 * BALL_RADIUS),
-                (self.rng.random() - 0.5) * 2 * (BACK_WALL_Y - 10 * BALL_RADIUS),
+                (self.rng.random() - 0.5) * 2 * (cv.SIDE_WALL_X - 10 * cv.BALL_RADIUS),
+                (self.rng.random() - 0.5) * 2 * (cv.BACK_WALL_Y - 10 * cv.BALL_RADIUS),
                 ball_height,
             ],
             dtype=np.float32,
@@ -65,22 +69,22 @@ class AirialState:
 
         for idx in range(self.blue_size):
             car = self._new_car()
-            car.team_num = BLUE_TEAM
+            car.team_num = cv.BLUE_TEAM
             state.cars["blue-{}".format(idx)] = car
 
         for idx in range(self.orange_size):
             car = self._new_car()
-            car.team_num = ORANGE_TEAM
+            car.team_num = cv.ORANGE_TEAM
             state.cars["orange-{}".format(idx)] = car
 
     def _new_car(self) -> Car:
         car = Car()
-        car.hitbox_type = OCTANE
+        car.hitbox_type = cv.OCTANE
 
         car.physics = PhysicsObject()
 
-        x_max = SIDE_WALL_X - 10 * BALL_RADIUS
-        y_max = BACK_WALL_Y - 10 * BALL_RADIUS
+        x_max = cv.SIDE_WALL_X - 10 * cv.BALL_RADIUS
+        y_max = cv.BACK_WALL_Y - 10 * cv.BALL_RADIUS
         car.physics.position = np.array(
             [
                 self.rng.uniform(-x_max, x_max),

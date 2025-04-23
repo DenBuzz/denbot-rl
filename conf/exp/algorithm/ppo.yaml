@@ -1,8 +1,11 @@
 training:
   gamma: 0.995
   lambda_: 0.95
-  lr: 2e-5
-  entropy_coeff: 0.01
+  lr: 1e-5
+  entropy_coeff: 
+    - [0, 0.02]
+    - [5e7, 0.01]
+    - [1e8, 0.005]
   train_batch_size_per_learner: 8192
   num_epochs: 32
   minibatch_size: 1024
@@ -10,8 +13,8 @@ training:
   use_kl_loss: false
 
 rl_module:
-  model_config:
-    load_state_path: /home/denbuzz/src/denbot-rl/ray_results/denbot_1on0/2025-04-05-09-53-54-2cf43_00000/checkpoint_000036/learner_group/learner/rl_module
-    fcnet_hiddens: [256, 256]
-      # grid_search: [[256, 256], [256, 256, 256]]
-    fcnet_activation: LeakyReLU
+  rl_module_spec:
+    # load_state_path: /home/denbuzz/src/denbot-rl/ray_results/denbot_1on0/2025-04-22-19-55-30-090c2_00000/checkpoint_000009/learner_group/learner/rl_module/denbot
+    model_config:
+      fcnet_hiddens: [1024, 1024]
+      fcnet_activation: LeakyReLU

@@ -1,0 +1,23 @@
+ball_hunt:
+
+  state_mutator:
+    _target_: env.state_mutators.ball_hunt.BallHunt
+
+  rewards:
+    ball_touch: 1
+    boost_collect: 0.1
+    full_boost: 0
+    distance_player_ball: 0.0025
+    distance_ball_goal: 0
+    facing_ball: 0.000625
+    velocity_player_to_ball: 0.00125
+    velocity: 0.0025
+    boost_amount: 0.00125
+    boost_proximity: 0.00125
+
+  termination_cond:
+    _target_: env.terminal_condition.BallTouchTermination
+
+  truncation_cond:
+    _target_: env.terminal_condition.TimeoutCondition
+    timeout_seconds: 20

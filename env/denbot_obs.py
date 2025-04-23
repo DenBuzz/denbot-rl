@@ -15,13 +15,14 @@ class DenbotObs:
     def __init__(self):
         pass
 
-    def reset(self, info: dict): ...
+    def reset(self, info: dict):
+        self.reward_weights = info["reward_weights"]  # 19
 
     def get_obs_space(self, agent: str) -> gym.Space:
         return gym.spaces.Box(
             -100,
             100,
-            shape=(61 + 34 + 16 + 72 + 52 + 102,),
+            shape=(19 + 61 + 34 + 16 + 72 + 52 + 16 + 102,),
         )
 
     def build_obs(self, agents: list[str], state: GameState) -> dict[str, np.ndarray]:
@@ -47,10 +48,21 @@ class DenbotObs:
         car_obs = self._car_obs(car)
         car_phys_obs = self._car_physics_obs(car_phys)
         relative_car_ball_obs = self._relative_physics_obs(car_phys, ball)
+        relative_ball_obs = self._relative_ball_obs(ball)
         relative_pad_obs = self._relative_pads(car_phys)
 
         return np.concatenate(
-            (intrinsic_ball_obs, pads_obs, car_obs, car_phys_obs, relative_car_ball_obs, relative_pad_obs), dtype=np.float32
+            (
+                self.reward_weights,
+                intrinsic_ball_obs,
+                pads_obs,
+                car_obs,
+                car_phys_obs,
+                relative_car_ball_obs,
+                relative_ball_obs,
+                relative_pad_obs,
+            ),
+            dtype=np.float32,
         )
 
     def _ball_obs(self, ball: PhysicsObject):
@@ -112,6 +124,23 @@ class DenbotObs:
         displacement = fourier_encoder(0, 2 * cv.BACK_WALL_Y, ball_vec, frequencies=4, periodic=False).flatten()  # 3*2*4=24
         distance = fourier_encoder(0, 2 * cv.BACK_WALL_Y, float(norm(ball_vec)), frequencies=2, periodic=False).flatten()  # 2*1*2=4
         return np.concatenate((angles, displacement, distance))  # 52
+
+    def _relative_ball_obs(self, ball: PhysicsObject) -> np.ndarray:
+        """Relative values for the ball"""
+        posts = np.array(
+            [
+                [-cv.GOAL_CENTER_TO_POST, cv.BACK_WALL_Y, 0],
+                [cv.GOAL_CENTER_TO_POST, cv.BACK_WALL_Y, 0],
+                [-cv.GOAL_CENTER_TO_POST, -cv.BACK_WALL_Y, 0],
+                [cv.GOAL_CENTER_TO_POST, -cv.BACK_WALL_Y, 0],
+            ]
+        )
+        ball2posts = posts - ball.position
+        post_angles = []
+        for target in ball2posts:
+            post_angles.append(planar_angle(ball.linear_velocity, np.array([0, 0, 1]), target=target))
+        angles = fourier_encoder(-np.pi, np.pi, np.array(post_angles), frequencies=2, periodic=True).flatten()  # 4*2*2
+        return angles  # 16
 
     def _relative_pads(self, physics: PhysicsObject) -> np.ndarray:
         """idk about this..."""

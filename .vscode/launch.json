@@ -21,6 +21,30 @@
       "console": "integratedTerminal"
     },
     {
+      "name": "Debug train air_dribble",
+      "request": "launch",
+      "program": "train.py",
+      "args": [
+        "exp=air_dribble",
+        "resources=debug"
+      ],
+      "justMyCode": false,
+      "type": "debugpy",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Debug train offense",
+      "request": "launch",
+      "program": "train.py",
+      "args": [
+        "exp=offense",
+        "resources=debug"
+      ],
+      "justMyCode": false,
+      "type": "debugpy",
+      "console": "integratedTerminal"
+    },
+    {
       "name": "Debug train boost gather",
       "request": "launch",
       "program": "train.py",

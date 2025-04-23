@@ -65,6 +65,7 @@ def sample_action(action_dist_inputs, space):
 
 def run_episode(env: RLEnv, rl_module: RLModule, env_to_module: EnvToModulePipeline, module_to_env: ModuleToEnvPipeline):
     obs, _ = env.reset()
+    env.render()
     start_time = time()
     episode = MultiAgentEpisode(
         observations=[obs],
@@ -76,7 +77,7 @@ def run_episode(env: RLEnv, rl_module: RLModule, env_to_module: EnvToModulePipel
     steps = 0
     while not episode.is_done:
         shared_data = {}
-        input_dict = env_to_module(episodes=[episode], rl_module=rl_module, explore=True, shared_data=shared_data)
+        input_dict = env_to_module(episodes=[episode], rl_module=rl_module, explore=False, shared_data=shared_data)
         rl_module_out = rl_module.forward_inference(input_dict)
         to_env = module_to_env(batch=rl_module_out, episodes=[episode], rl_module=rl_module, explore=True, shared_data=shared_data)
         action = to_env.pop(Columns.ACTIONS)[0]
@@ -90,8 +91,8 @@ def run_episode(env: RLEnv, rl_module: RLModule, env_to_module: EnvToModulePipel
 
 
 if __name__ == "__main__":
-    env = create_env("1v0")
-    # env.state_mutator.max_ball_height = 355
+    env = create_env("air_dribble")
+    env.set_tasks(1)
     while True:
         most_recent_checkpoint = get_most_recent_checkpoint()
         rl_module, env_to_module, module_to_env = load_components_from_checkpoint(most_recent_checkpoint)

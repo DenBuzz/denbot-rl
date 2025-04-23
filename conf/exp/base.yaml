@@ -1,6 +1,11 @@
 defaults:
   - algorithm: ppo
-  - env_configs/configs
+  - env_config/env_config
 
 algorithm:
   environment: {}
+  evaluation:
+    evaluation_interval: 2
+    evaluation_duration: 4
+    evaluation_num_env_runners: 2
+    evaluation_parallel_to_training: True

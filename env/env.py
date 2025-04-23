@@ -1,5 +1,7 @@
+from collections import defaultdict
 from typing import Any
 
+import numpy as np
 from ray.rllib.env import MultiAgentEnv
 from ray.rllib.utils.typing import MultiAgentDict
 from rlgym.rocket_league.api import GameState
@@ -20,37 +22,35 @@ class RLEnv(MultiAgentEnv):
     def __init__(self, config):
         super().__init__()
         self.config = config
-        self.state_mutator = config["state_mutator"]
-        self.termination_cond = config["termination_cond"]
-        self.truncation_cond = config["truncation_cond"]
+        self.envs = config["envs"]
+        self.curriculum = config["curriculum"]
+        self.meta_task = 0
+        self.env_tasks = defaultdict(int)
 
         self.obs_builder = DenbotObs()
         self.action_parser = SeerAction(repeats=8)
-        self.reward_fn = DenBotReward(**config["rewards"])
         self.renderer = RLViserRenderer()
 
         self.sim = RocketSimEngine()
         self.possible_agents = []
-        for i in range(config["blue_size"]):
+        for i in range(3):
             self.possible_agents.append(f"blue-{i}")
-        for i in range(config["orange_size"]):
             self.possible_agents.append(f"orange-{i}")
 
         self.action_spaces = {agent: self.action_parser.get_action_space(agent) for agent in self.possible_agents}
         self.observation_spaces = {agent: self.obs_builder.get_obs_space(agent) for agent in self.possible_agents}
-
-        self._shared_info = {}
 
     @property
     def state(self) -> GameState:
         return self.sim.state
 
     def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None):
-        self.state_mutator.reset(self._shared_info)
-        self.reward_fn.reset(self._shared_info)
-        self.termination_cond.reset(self._shared_info)
-        self.truncation_cond.reset(self._shared_info)
-        self.obs_builder.reset(self._shared_info)
+        self._load_task()
+        self.state_mutator.reset(self.shared_info)
+        self.reward_fn.reset(self.shared_info)
+        self.termination_cond.reset(self.shared_info)
+        self.truncation_cond.reset(self.shared_info)
+        self.obs_builder.reset(self.shared_info)
 
         initial_state = self.sim.create_base_state()
         self.state_mutator.apply(initial_state, self.sim)
@@ -77,15 +77,26 @@ class RLEnv(MultiAgentEnv):
         rewards = {agent: self.reward_fn.apply(agent, new_state) for agent in agents}
         return obs, rewards, is_terminated, is_truncated, {}
 
+    def _load_task(self) -> None:
+        meta_task_config = self.curriculum["tasks"][self.meta_task]
+        next_env = np.random.choice(meta_task_config["envs"])
+        env_config = self.envs[next_env]
+
+        self.shared_info = {"task": self.env_tasks[next_env], "env": next_env}
+
+        self.state_mutator = env_config["state_mutator"]
+        self.termination_cond = env_config["termination_cond"]
+        self.truncation_cond = env_config["truncation_cond"]
+        self.reward_fn = DenBotReward(**env_config["rewards"])
+
     def render(self) -> Any:
         self.renderer.render(self.state, {})
         return True
 
-    def get_task(self) -> int:
-        return self._shared_info["current_task"]
-
-    def set_task(self, task: int) -> None:
-        self._shared_info["current_task"] = task
+    def set_tasks(self, task: int, tasks: dict[str, int] | None = None) -> None:
+        if tasks:
+            self.env_tasks = defaultdict(int).update(tasks)
+        self.meta_task = task
 
     def close(self) -> None:
         self.sim.close()

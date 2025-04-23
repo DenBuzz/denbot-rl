@@ -1,0 +1,29 @@
+air_dribble:
+
+  state_mutator:
+    _target_: env.state_mutators.air_dribble.AirDribble
+    blue_size: 1
+    orange_size: 0
+
+  rewards:
+    goal_scored: 1
+    ball_touch: 0.025
+    boost_collect: 0.1
+    distance_player_ball: 0.000625
+    offensive_angle: 0.00125
+    distance_ball_goal: 0.0025
+    facing_ball: 0.000625
+    velocity_player_to_ball: 0.00125
+    velocity_ball_goal: 0.00125
+    velocity: 0.0025
+    boost_amount: 0
+    boost_proximity: 0
+
+  termination_cond:
+    _target_: env.terminal_condition.GoalCondition
+
+  truncation_cond:
+    _target_: env.terminal_condition.BallMinHeight
+    height: 118.15  # 93.15 + 25, resting plus buffer
+    delay: 2
+

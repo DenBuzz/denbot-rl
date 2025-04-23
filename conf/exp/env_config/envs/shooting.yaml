@@ -1,0 +1,28 @@
+shooting:
+
+  state_mutator:
+    _target_: env.state_mutators.shooting_drill.ShootingDrill
+
+  rewards:
+    goal_scored: 1
+    ball_touch: 0.0025
+    boost_collect: 0.1
+    distance_player_ball: 0.0025
+    distance_ball_goal: 0.0025
+    facing_ball: 0.000625
+    velocity_player_to_ball: 0.00125
+    velocity_ball_goal: 0.005
+    velocity: 0.000625
+    boost_amount: 0
+
+  termination_cond:
+    _target_: env.terminal_condition.GoalCondition
+
+  truncation_cond:
+    _target_: env.terminal_condition.AnyCondition
+    conditions:
+      - _target_: env.terminal_condition.NegativeY
+      - _target_: env.terminal_condition.NoTouchTimeoutCondition
+        timeout_seconds: 5
+      - _target_: env.terminal_condition.MaxTouches
+        touches: 2
