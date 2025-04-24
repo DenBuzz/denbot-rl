@@ -4,18 +4,11 @@ from rlgym.rocket_league.api import Car, GameState, PhysicsObject
 from rlgym.rocket_league.sim import RocketSimEngine
 
 
-class AirDribble:
-    CURRICULUM_STEPS = 100
+class WallAirDribble:
     SIDE_WALL_MAX_Y = cv.BACK_WALL_Y - cv.CORNER_CATHETUS_LENGTH
 
-    def __init__(
-        self,
-        blue_size: int = 1,
-        orange_size: int = 0,
-    ) -> None:
+    def __init__(self) -> None:
         self.rng = np.random.default_rng()
-        self.blue_size = blue_size
-        self.orange_size = orange_size
 
     def reset(self, info: dict):
         # task = info.get("task", 0)
@@ -44,7 +37,13 @@ class AirDribble:
         car = self._new_car()
         car.team_num = cv.BLUE_TEAM
 
-        car.physics.position = np.array([ball_x - np.sign(ball_x) * (4 * cv.BALL_RADIUS), ball_y - self.rng.uniform(0, 50), 17])
+        car.physics.position = np.array(
+            [
+                ball_x - np.sign(ball_x) * (self.rng.uniform(2, 7) * cv.BALL_RADIUS),
+                ball_y - self.rng.uniform(0, 50),
+                17,
+            ]
+        )
         car.physics.linear_velocity = state.ball.linear_velocity
         car.physics.euler_angles = np.array([0, np.pi / 2 * (1 - np.sign(ball_x)), 0])
         car.boost_amount = 100
@@ -84,3 +83,41 @@ class AirDribble:
         car.autoflip_timer = 0.0
         car.autoflip_direction = 0.0
         return car
+
+
+class FieldAirDribble(WallAirDribble):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def apply(self, state: GameState, sim: RocketSimEngine) -> None:
+        ball_x = self.rng.uniform(-cv.SIDE_WALL_X + cv.CORNER_CATHETUS_LENGTH, cv.SIDE_WALL_X - cv.CORNER_CATHETUS_LENGTH)
+        ball_y = self.rng.uniform(-cv.BACK_WALL_Y + cv.CORNER_CATHETUS_LENGTH, cv.BACK_WALL_Y - cv.CORNER_CATHETUS_LENGTH)
+
+        state.ball.position = np.array(
+            [
+                ball_x,
+                ball_y,
+                self.rng.uniform(cv.BALL_RESTING_HEIGHT, cv.BALL_RESTING_HEIGHT + cv.BALL_RADIUS / 2),
+            ],
+            dtype=np.float32,
+        )
+        goal_ball_vec = cv.ORANGE_GOAL_BACK[:2] - state.ball.position[:2]
+
+        ball_vx = goal_ball_vec[0] / 8 + self.rng.uniform(-200, 200)
+        ball_vy = goal_ball_vec[1] / 8 + self.rng.uniform(-200, 200)
+        pop = self.rng.uniform(500, 1200)
+        state.ball.linear_velocity = np.array([ball_vx, ball_vy, pop])
+        state.ball.angular_velocity = np.zeros(3)
+
+        car = self._new_car()
+        car.team_num = cv.BLUE_TEAM
+
+        goal_ball_vec_u = goal_ball_vec / np.linalg.norm(goal_ball_vec)
+        car_xy = state.ball.position[:2] - 2 * cv.BALL_RADIUS * goal_ball_vec_u[:2]
+
+        car.physics.position = np.concatenate((car_xy, [17]))
+        # car.physics.linear_velocity = state.ball.linear_velocity
+        car.physics.euler_angles = np.array([0, np.pi / 2, 0])
+        car.boost_amount = 100
+
+        state.cars["blue-0"] = car

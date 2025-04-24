@@ -1,9 +1,7 @@
-air_dribble:
+field_air_dribble:
 
   state_mutator:
-    _target_: env.state_mutators.air_dribble.AirDribble
-    blue_size: 1
-    orange_size: 0
+    _target_: env.state_mutators.air_dribble.FieldAirDribble
 
   rewards:
     goal_scored: 1

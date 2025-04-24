@@ -41,8 +41,10 @@ class EpisodeData(RLlibCallback):
                 case "airial":
                     ball_touches = np.array([car.ball_touches for car in my_env.state.cars.values()])
                     metrics_logger.log_value("airial_ball_touched", int(any(ball_touches > 0)), reduce="mean", ema_coeff=0.2)
-                case "air_dribble":
-                    metrics_logger.log_value("air_dribble_goal_scored", int(my_env.state.goal_scored), reduce="mean", ema_coeff=0.2)
+                case "wall_air_dribble":
+                    metrics_logger.log_value("wall_air_dribble_goal_scored", int(my_env.state.goal_scored), reduce="mean", ema_coeff=0.2)
+                case "field_air_dribble":
+                    metrics_logger.log_value("field_air_dribble_goal_scored", int(my_env.state.goal_scored), reduce="mean", ema_coeff=0.2)
                 case "shooting":
                     metrics_logger.log_value("shooting_goal_scored", int(my_env.state.goal_scored), reduce="mean", ema_coeff=0.2)
                 case "ball_hunt":

@@ -14,7 +14,7 @@ training:
 
 rl_module:
   rl_module_spec:
-    # load_state_path: /home/denbuzz/src/denbot-rl/ray_results/denbot_1on0/2025-04-22-19-55-30-090c2_00000/checkpoint_000009/learner_group/learner/rl_module/denbot
+    load_state_path: /home/denbuzz/src/denbot-rl/cool_checkpoints/ball_hunt/learner_group/learner/rl_module/denbot
     model_config:
       fcnet_hiddens: [1024, 1024]
       fcnet_activation: LeakyReLU

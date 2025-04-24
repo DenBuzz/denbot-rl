@@ -5,7 +5,7 @@ env_config:
   curriculum:
     tasks:
       - envs: [ball_hunt]
-      - envs: [air_dribble]
+      - envs: [field_air_dribble, wall_air_dribble]
 
 algorithm:
   callbacks:

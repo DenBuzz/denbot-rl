@@ -23,7 +23,6 @@ def get_trials() -> list[str]:
 
     return trials
 
-
 def get_checkpoints(trial_path: str) -> list[str]:
     checkpoint_str = f"{trial_path}/checkpoint_*/"
     all_checkpoints = glob.glob(checkpoint_str, recursive=True)
@@ -99,6 +98,7 @@ def play_episode(n_clicks, selected_trial, selected_checkpoint, selected_env, lo
         run_episode(env, rl_module, env_to_module, module_to_env)
         while loop:
             run_episode(env, rl_module, env_to_module, module_to_env)
+            loop = 'loop' in loop_value  # Check the loop state after each episode
     return f"Played episode with {selected_env} environment."
 
 # Run the app
