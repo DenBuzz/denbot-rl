@@ -15,7 +15,7 @@ def boost_prox_reward(pos: np.ndarray):
     pad_amounts[big_pad_indices] = 100
 
     distances = np.linalg.norm(boosts[:, :2] - pos[:2], axis=1)
-    rewards = timer_mask * pad_amounts / 100 * np.exp(-0.003 * distances)
+    rewards = np.sqrt(pad_amounts / 100) * np.exp(-0.002 * distances) # * timer_mask
 
     return np.sum(rewards)
 
@@ -38,7 +38,7 @@ for i in range(resolution):
 
 plt.figure(figsize=(10, 8))
 plt.contourf(X, Y, reward_matrix, levels=100, cmap="viridis")
-plt.colorbar(label="Reward", orientation="vertical", fraction=0.02)
+plt.colorbar(label="Reward")
 plt.title("Reward Surface Based on Car Position Relative to Boost Pads")
 plt.xlabel("X Position of Car")
 plt.ylabel("Y Position of Car")

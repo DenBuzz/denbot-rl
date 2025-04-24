@@ -4,13 +4,11 @@ import numpy as np
 import rlgym.rocket_league.common_values as cv
 from rlgym.rocket_league.api import Car, GameState, PhysicsObject
 
+BOOST_LOCATIONS = np.array(cv.BOOST_LOCATIONS)
+BOOST_PAD_AMOUNTS = 12 * np.ones(BOOST_LOCATIONS.shape[0])
+BOOST_PAD_AMOUNTS[[3, 4, 15, 18, 29, 30]] = 100
 
 class DenBotReward:
-    BOOST_LOCATIONS = np.array(cv.BOOST_LOCATIONS)
-
-    big_pad_indices = [3, 4, 15, 18, 29, 30]
-    PAD_AMOUNTS = 12 * np.ones(BOOST_LOCATIONS.shape[0])
-    PAD_AMOUNTS[big_pad_indices] = 100
 
     def __init__(
         self,
@@ -181,7 +179,7 @@ class DenBotReward:
 
     def _boost_proximity(self, agent: str, car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
         timer_mask = state.boost_pad_timers == 0
-        distances = np.linalg.norm(self.BOOST_LOCATIONS[:, :2] - car_physics.position[:2], axis=1)
-        rewards = timer_mask * self.PAD_AMOUNTS / 100 * np.exp(-0.003 * distances)
+        distances = np.linalg.norm(BOOST_LOCATIONS[:, :2] - car_physics.position[:2], axis=1)
+        rewards = timer_mask * np.sqrt(BOOST_PAD_AMOUNTS / 100) * np.exp(-0.002 * distances)
 
         return np.sum(rewards)

@@ -103,8 +103,8 @@ class FieldAirDribble(WallAirDribble):
         )
         goal_ball_vec = cv.ORANGE_GOAL_BACK[:2] - state.ball.position[:2]
 
-        ball_vx = goal_ball_vec[0] / 8 + self.rng.uniform(-200, 200)
-        ball_vy = goal_ball_vec[1] / 8 + self.rng.uniform(-200, 200)
+        ball_vx = goal_ball_vec[0] / 10 + self.rng.uniform(-200, 200)
+        ball_vy = goal_ball_vec[1] / 10 + self.rng.uniform(-200, 200)
         pop = self.rng.uniform(500, 1200)
         state.ball.linear_velocity = np.array([ball_vx, ball_vy, pop])
         state.ball.angular_velocity = np.zeros(3)

@@ -21,7 +21,12 @@ field_air_dribble:
     _target_: env.terminal_condition.GoalCondition
 
   truncation_cond:
-    _target_: env.terminal_condition.BallMinHeight
-    height: 118.15  # 93.15 + 25, resting plus buffer
-    delay: 2
+    _target_: env.terminal_condition.AnyCondition
+    conditions:
+      - _target_: env.terminal_condition.BallMinHeight
+        height: 118.15  # 93.15 + 25, resting plus buffer
+        delay: 1
+      - _target_: env.terminal_condition.CarMinHeight
+        height: 35  # 17 * 2, resting car doubled
+        delay: 1.5
 

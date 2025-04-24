@@ -76,6 +76,20 @@ class BallMinHeight:
             return {agent: False for agent in agents}
         return {agent: state.ball.position[2] < self.height for agent in agents}
 
+class CarMinHeight:
+    """Terminate on the car dropping below given height"""
+
+    def __init__(self, height: float, delay: float = 1.0):
+        self.height = height
+        self.delay = delay
+
+    def reset(self, info: dict): ...
+
+    def is_done(self, agents: list[str], state: GameState) -> dict[str, bool]:
+        if state.tick_count / TICKS_PER_SECOND < self.delay:
+            return {agent: False for agent in agents}
+        return {agent: state.cars[agent].physics.position[2] < self.height for agent in agents}
+
 
 class MaxTouches:
     """Terminate on the ball being touched too much"""

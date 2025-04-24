@@ -92,7 +92,7 @@ def run_episode(env: RLEnv, rl_module: RLModule, env_to_module: EnvToModulePipel
 
 if __name__ == "__main__":
     env = create_env("air_dribble")
-    env.set_tasks(1)
+    env.set_tasks(0)
     while True:
         most_recent_checkpoint = get_most_recent_checkpoint()
         rl_module, env_to_module, module_to_env = load_components_from_checkpoint(most_recent_checkpoint)
