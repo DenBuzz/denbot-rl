@@ -8,8 +8,8 @@ BOOST_LOCATIONS = np.array(cv.BOOST_LOCATIONS)
 BOOST_PAD_AMOUNTS = 12 * np.ones(BOOST_LOCATIONS.shape[0])
 BOOST_PAD_AMOUNTS[[3, 4, 15, 18, 29, 30]] = 100
 
-class DenBotReward:
 
+class DenBotReward:
     def __init__(
         self,
         goal_scored: float = 0,
@@ -75,7 +75,8 @@ class DenBotReward:
                 boost_amount,
                 boost_proximity,
                 forward_velocity,
-            ]
+            ],
+            dtype=np.float32,
         )
 
     def reset(self, info: dict):

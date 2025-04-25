@@ -19,10 +19,13 @@ class DenbotObs:
         self.reward_weights = info["reward_weights"]  # 19
 
     def get_obs_space(self, agent: str) -> gym.Space:
-        return gym.spaces.Box(
-            -100,
-            100,
-            shape=(19 + 61 + 34 + 16 + 72 + 52 + 16 + 102,),
+        return gym.spaces.Dict(
+            {
+                "rewards": gym.spaces.Box(-100, 100, shape=(19,)),
+                "pads": gym.spaces.Box(-100, 100, shape=(34,)),
+                "ball": gym.spaces.Box(-100, 100, shape=(61 + 16,)),
+                "agent": gym.spaces.Box(-100, 100, shape=(16 + 72 + 52 + 102,)),
+            }
         )
 
     def build_obs(self, agents: list[str], state: GameState) -> dict[str, np.ndarray]:
@@ -32,7 +35,7 @@ class DenbotObs:
 
         return obs
 
-    def _build_agent_obs(self, agent: str, state: GameState) -> np.ndarray:
+    def _build_agent_obs(self, agent: str, state: GameState) -> dict[str, np.ndarray]:
         car = state.cars[agent]
         if car.team_num == cv.ORANGE_TEAM:
             ball = state.inverted_ball
@@ -43,27 +46,27 @@ class DenbotObs:
             pads = state.boost_pad_timers
             car_phys = car.physics
 
-        intrinsic_ball_obs = self._ball_obs(ball)
-        pads_obs = self._pad_timers(pads)
-        car_obs = self._car_obs(car)
-        car_phys_obs = self._car_physics_obs(car_phys)
-        relative_car_ball_obs = self._relative_physics_obs(car_phys, ball)
-        relative_ball_obs = self._relative_ball_obs(ball)
-        relative_pad_obs = self._relative_pads(car_phys)
-
-        return np.concatenate(
-            (
-                self.reward_weights,
-                intrinsic_ball_obs,
-                pads_obs,
-                car_obs,
-                car_phys_obs,
-                relative_car_ball_obs,
-                relative_ball_obs,
-                relative_pad_obs,
+        obs = {
+            "rewards": self.reward_weights,
+            "pads": self._pad_timers(pads),
+            "ball": np.concatenate(
+                (
+                    self._ball_obs(ball),
+                    self._relative_ball_obs(ball),
+                ),
+                dtype=np.float32,
             ),
-            dtype=np.float32,
-        )
+            "agent": np.concatenate(
+                (
+                    self._car_obs(car),
+                    self._car_physics_obs(car_phys),
+                    self._relative_physics_obs(car_phys, ball),
+                    self._relative_pads(car_phys),
+                ),
+                dtype=np.float32,
+            ),
+        }
+        return obs
 
     def _ball_obs(self, ball: PhysicsObject):
         pos = encode_position(ball.position, frequencies=6)  # high res ball position, 3*2*6=36

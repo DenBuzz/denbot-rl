@@ -95,7 +95,8 @@ class RLEnv(MultiAgentEnv):
 
     def set_tasks(self, task: int, tasks: dict[str, int] | None = None) -> None:
         if tasks:
-            self.env_tasks = defaultdict(int).update(tasks)
+            self.env_tasks = defaultdict(int)
+            self.env_tasks.update(tasks)
         self.meta_task = task
 
     def close(self) -> None:

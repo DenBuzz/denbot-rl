@@ -5,6 +5,7 @@ from ray.rllib.algorithms import PPOConfig
 from ray.rllib.core.rl_module import RLModuleSpec
 
 from env import RLEnv
+from nn.denbot import DenBot
 from training.callbacks import CurriculumCallback
 
 
@@ -39,7 +40,7 @@ def build_exp_config(config):
         .env_runners(**algo_cfg.env_runners)
         .learners(**algo_cfg.learners)
         .multi_agent(policies={"denbot"}, policy_mapping_fn=mapping_fn)
-        .rl_module(rl_module_spec=RLModuleSpec(**OmegaConf.to_container(algo_cfg.rl_module.rl_module_spec)))
+        .rl_module(rl_module_spec=RLModuleSpec(module_class=DenBot, **OmegaConf.to_container(algo_cfg.rl_module_spec)))
         .callbacks(callbacks_class=multi_callback(algo_cfg.callbacks, config.env_config.curriculum))
         .evaluation(**algo_cfg.evaluation)
     )
