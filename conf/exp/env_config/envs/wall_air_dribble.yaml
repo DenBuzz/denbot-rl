@@ -21,7 +21,11 @@ wall_air_dribble:
     _target_: env.terminal_condition.GoalCondition
 
   truncation_cond:
-    _target_: env.terminal_condition.BallMinHeight
-    height: 118.15  # 93.15 + 25, resting plus buffer
-    delay: 2
+    _target_: env.terminal_condition.AnyCondition
+    conditions:
+      - _target_: env.terminal_condition.BallMinHeight
+        height: 118.15  # 93.15 + 25, resting plus buffer
+        delay: 2
+      - _target_: env.terminal_condition.CarInFront
+        buffer: 150  # About 1.5 ball radius
 

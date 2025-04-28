@@ -7,6 +7,7 @@ defaults:
   - envs/half_flip
   - envs/shooting
   - envs/ball_hunt
+  - envs/speed_flip
 
 curriculum:
   envs:
@@ -28,6 +29,12 @@ curriculum:
       metric:
         key: ball_hunt_ball_touched
         value: 0.8
+    speed_flip:
+      start: 0
+      max: 10
+      metric:
+        key: speed_flip_ball_touched
+        value: 0.5
     wall_air_dribble:
       start: 0
       max: 1

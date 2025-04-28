@@ -50,6 +50,9 @@ class EpisodeData(RLlibCallback):
                 case "ball_hunt":
                     ball_touches = np.array([car.ball_touches for car in my_env.state.cars.values()])
                     metrics_logger.log_value("ball_hunt_ball_touched", int(any(ball_touches > 0)), reduce="mean", ema_coeff=0.2)
+                case "speed_flip":
+                    ball_touches = np.array([car.ball_touches for car in my_env.state.cars.values()])
+                    metrics_logger.log_value("speed_flip_ball_touched", int(any(ball_touches > 0)), reduce="mean", ema_coeff=0.2)
 
             # ball_touches = np.array([car.ball_touches for car in my_env.state.cars.values()])
             # metrics_logger.log_value("ball_touched", int(any(ball_touches > 0)), reduce="mean", clear_on_reduce=True)
@@ -83,11 +86,11 @@ class CurriculumCallback(RLlibCallback):
         for env in task_envs:
             env_curriculum = self.curriculum_config["envs"][env]
             env_completions[env] = self._task_complete(metrics_logger, env, env_curriculum)
-            if self._should_promote(metrics_logger, env, env_curriculum):
+            if self._should_promote(metrics_logger, env, env_curriculum) and not env_completions[env]:
                 env_promotions.append(env)
                 metrics_logger.delete((EVALUATION_RESULTS, ENV_RUNNER_RESULTS, env_curriculum["metric"]["key"]))
 
-        if all(env_completions.values()):
+        if meta_task < len(self.curriculum_config["tasks"]) - 1 and all(env_completions.values()):
             print(f"Meta task with {task_envs} is complete!")
             meta_task += 1
             algorithm._counters["meta_task"] = meta_task
@@ -125,6 +128,6 @@ class CurriculumCallback(RLlibCallback):
 
     def _task_complete(self, metrics_logger: MetricsLogger, env: str, env_curriculum: dict[str, Any]) -> bool:
         if metrics_logger.peek((EVALUATION_RESULTS, ENV_RUNNER_RESULTS, f"{env}-env"), default=0) >= env_curriculum["max"]:
-            print(f"{env} complete!")
+            # print(f"{env} complete!")
             return True
         return False

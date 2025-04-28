@@ -29,4 +29,6 @@ field_air_dribble:
       - _target_: env.terminal_condition.CarMinHeight
         height: 35  # 17 * 2, resting car doubled
         delay: 1.5
+      - _target_: env.terminal_condition.CarInFront
+        buffer: 150  # About 1.5 ball radius
 

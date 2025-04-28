@@ -4,7 +4,8 @@ defaults:
 env_config:
   curriculum:
     tasks:
-      - envs: [air_dribble, shooting, air_dribble]
+      # - envs: [speed_flip, speed_flip, ball_hunt]
+      - envs: [wall_air_dribble, wall_air_dribble, field_air_dribble, field_air_dribble, shooting, speed_flip, ball_hunt]
 
 algorithm:
   callbacks:

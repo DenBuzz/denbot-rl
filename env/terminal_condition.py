@@ -62,6 +62,37 @@ class BallTouchTermination:
         return {agent: state.cars[agent].ball_touches > 0 for agent in agents}
 
 
+class CarInFront:
+    """Terminate when car leads the ball"""
+
+    def __init__(self, buffer: float):
+        self.buffer = buffer
+
+    def reset(self, info: dict): ...
+
+    def is_done(self, agents: list[str], state: GameState) -> dict[str, bool]:
+        return {agent: state.cars[agent].physics.position[1] - state.ball.position[1] > self.buffer for agent in agents}
+
+
+class NoFlip:
+    """Terminate if car doesn't flip"""
+
+    def __init__(self, delay: float):
+        self.delay = delay
+        self.car_flipped = defaultdict(bool)
+
+    def reset(self, info: dict):
+        self.car_flipped = defaultdict(bool)
+
+    def is_done(self, agents: list[str], state: GameState) -> dict[str, bool]:
+        for agent in agents:
+            if state.cars[agent].has_flipped:
+                self.car_flipped[agent] = True
+        if state.tick_count / TICKS_PER_SECOND < self.delay:
+            return {agent: False for agent in agents}
+        return {agent: not self.car_flipped[agent] for agent in agents}
+
+
 class BallMinHeight:
     """Terminate on the ball dropping below given height"""
 
@@ -75,6 +106,7 @@ class BallMinHeight:
         if state.tick_count / TICKS_PER_SECOND < self.delay:
             return {agent: False for agent in agents}
         return {agent: state.ball.position[2] < self.height for agent in agents}
+
 
 class CarMinHeight:
     """Terminate on the car dropping below given height"""

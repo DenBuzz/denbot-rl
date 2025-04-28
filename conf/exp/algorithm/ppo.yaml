@@ -1,17 +1,19 @@
 training:
-  gamma: 0.995
+  gamma: 0.99
   lambda_: 0.95
-  lr: 1e-5
-  entropy_coeff: 0.005
-  train_batch_size_per_learner: 8192
+  lr: 2e-5
+  entropy_coeff: 
+    - [0, 0.02]
+    - [1e8, 0.01]
+  train_batch_size_per_learner: 20000
   num_epochs: 32
-  minibatch_size: 1024
+  minibatch_size: 4000
   shuffle_batch_per_epoch: True
   use_kl_loss: false
-  vf_loss_coeff: 0.5
+  vf_loss_coeff: 0.9
 
 rl_module_spec:
-  # load_state_path: /home/denbuzz/src/denbot-rl/cool_checkpoints/ball_hunt/learner_group/learner/rl_module/denbot
+  load_state_path: /home/denbuzz/src/denbot-rl/ray_results/denbot_1on0/2025-04-27-14-04-31-d4fba_00000/checkpoint_000133/learner_group/learner/rl_module/denbot
   model_config:
-    fcnet_hiddens: [1024, 1024]
-    fcnet_activation: LeakyReLU
+    pi_hiddens: [1024, 1024]
+    vf_hiddens: [1024, 1024]

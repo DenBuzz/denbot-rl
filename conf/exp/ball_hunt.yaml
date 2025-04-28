@@ -4,7 +4,7 @@ defaults:
 env_config:
   curriculum:
     tasks:
-      - envs: [ball_hunt]
+      - envs: [speed_flip, speed_flip, ball_hunt]
 
 algorithm:
   callbacks:

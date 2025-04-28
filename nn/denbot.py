@@ -25,14 +25,14 @@ class DenBot(TorchRLModule, ValueFunctionAPI):
                 in_features=self.observation_space["rewards"].shape[0],
                 out_features=reward_embedding,
             ),
-            nn.ReLU(),
+            nn.LeakyReLU(),
         )
         self._pad_encoder = nn.Sequential(
             nn.Linear(
                 in_features=self.observation_space["pads"].shape[0],
                 out_features=pad_embedding,
             ),
-            nn.ReLU(),
+            nn.LeakyReLU(),
         )
         self._ball_encoder = nn.Linear(
             in_features=self.observation_space["ball"].shape[0],
@@ -42,19 +42,27 @@ class DenBot(TorchRLModule, ValueFunctionAPI):
             in_features=self.observation_space["agent"].shape[0],
             out_features=unit_embedding,
         )
-        self._mha = nn.MultiheadAttention(
-            embed_dim=unit_embedding,
-            num_heads=model_configs.get("num_heads", 8),
-            batch_first=True,
-        )
-        self._pi = nn.Linear(
-            in_features=reward_embedding + pad_embedding + 2 * unit_embedding,
-            out_features=self.action_space.nvec.sum(),
-        )
-        self._vf = nn.Linear(
-            in_features=reward_embedding + pad_embedding + 2 * unit_embedding,
-            out_features=1,
-        )
+        # self._mha = nn.MultiheadAttention(
+        #     embed_dim=unit_embedding,
+        #     num_heads=model_configs.get("num_heads", 8),
+        #     batch_first=True,
+        # )
+        prev_hiddens = reward_embedding + pad_embedding + 2 * unit_embedding
+        self._pi = nn.Sequential()
+        for hiddens in model_configs.get("pi_hiddens", []):
+            self._pi.append(nn.Linear(in_features=prev_hiddens, out_features=hiddens))
+            self._pi.append(nn.LeakyReLU())
+            prev_hiddens = hiddens
+        self._pi.append(nn.Linear(in_features=prev_hiddens, out_features=self.action_space.nvec.sum()))
+
+        prev_hiddens = reward_embedding + pad_embedding + 2 * unit_embedding
+        self._vf = nn.Sequential()
+        for hiddens in model_configs.get("vf_hiddens", []):
+            self._vf.append(nn.Linear(in_features=prev_hiddens, out_features=hiddens))
+            self._vf.append(nn.LeakyReLU())
+            prev_hiddens = hiddens
+        self._vf.append(nn.Linear(in_features=prev_hiddens, out_features=1))
+
         self.action_dist_cls = TorchMultiCategorical.get_partial_dist_cls(input_lens=tuple(self.action_space.nvec))
 
     def _compute_embeddings(self, batch: dict[str, Any]) -> torch.Tensor:
@@ -64,19 +72,20 @@ class DenBot(TorchRLModule, ValueFunctionAPI):
         ball_embedding = self._ball_encoder(obs["ball"])
         car_embedding = self._car_encoder(obs["agent"])
 
-        qkv = torch.cat((car_embedding.unsqueeze(1), ball_embedding.unsqueeze(1)), dim=1)
+        # qkv = torch.cat((car_embedding.unsqueeze(1), ball_embedding.unsqueeze(1)), dim=1)
+        #
+        # unit_embeddings, _ = self._mha(qkv, qkv, qkv)
+        # unit_embeddings = torch.flatten(unit_embeddings, start_dim=1)
 
-        unit_embeddings, _ = self._mha(qkv, qkv, qkv)
-        unit_embeddings = torch.flatten(unit_embeddings, start_dim=1)
-
-        embeddings = torch.cat((reward_embedding, pad_embedding, unit_embeddings), dim=-1)
+        embeddings = torch.cat((reward_embedding, pad_embedding, ball_embedding, car_embedding), dim=-1)
         return embeddings
 
     @override(RLModule)
     def _forward(self, batch: dict[str, Any], **kwargs) -> dict[str, Any]:
         embeddings = self._compute_embeddings(batch)
         logits = self._pi(embeddings)
-        return {Columns.ACTION_DIST_INPUTS: logits}
+        mask = batch[Columns.OBS]["mask"]
+        return {Columns.ACTION_DIST_INPUTS: torch.where(mask == 1, logits, -1e10)}
 
     @override(ValueFunctionAPI)
     def compute_values(self, batch: dict[str, Any], embeddings: Any = None) -> torch.Tensor:

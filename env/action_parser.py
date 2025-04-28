@@ -13,7 +13,7 @@ class SeerAction:
         self.repeats = repeats
 
     def get_action_space(self, agent: str) -> gym.Space:
-        return gym.spaces.MultiDiscrete([2, 5, 5, 3, 2, 2, 2])
+        return gym.spaces.MultiDiscrete([3, 5, 5, 3, 2, 2, 2])
 
     def parse_actions(self, actions: dict[str, th.Tensor], state: GameState) -> dict[str, np.ndarray]:
         parsed_actions = {}
@@ -21,7 +21,7 @@ class SeerAction:
             parsed_actions[agent] = (
                 np.array(
                     [
-                        self.boost[action[0]],
+                        self.throttle[action[0]],
                         self.steer_yaw[action[1]],
                         self.pitch[action[2]],
                         self.steer_yaw[action[1]],

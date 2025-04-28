@@ -10,13 +10,7 @@ class HalfFlip:
     A StateMutator that randomizes ball location.
     """
 
-    def __init__(
-        self,
-        blue_size: int = 1,
-        orange_size: int = 0,
-    ) -> None:
-        self.blue_size = blue_size
-        self.orange_size = orange_size
+    def __init__(self) -> None:
         self.rng = np.random.default_rng()
 
     def reset(self, info): ...

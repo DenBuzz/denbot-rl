@@ -9,9 +9,9 @@ ball_hunt:
     full_boost: 0
     distance_player_ball: 0.0025
     distance_ball_goal: 0
-    facing_ball: 0.000625
-    velocity_player_to_ball: 0.00125
-    velocity: 0.0025
+    facing_ball: 0.0025
+    velocity_player_to_ball: 0.0025
+    velocity: 0.000625
     boost_amount: 0.00125
     boost_proximity: 0.00125
 
@@ -20,4 +20,4 @@ ball_hunt:
 
   truncation_cond:
     _target_: env.terminal_condition.TimeoutCondition
-    timeout_seconds: 20
+    timeout_seconds: 10

@@ -25,6 +25,7 @@ class DenbotObs:
                 "pads": gym.spaces.Box(-100, 100, shape=(34,)),
                 "ball": gym.spaces.Box(-100, 100, shape=(61 + 16,)),
                 "agent": gym.spaces.Box(-100, 100, shape=(16 + 72 + 52 + 102,)),
+                "mask": gym.spaces.MultiBinary(n=22),
             }
         )
 
@@ -65,6 +66,7 @@ class DenbotObs:
                 ),
                 dtype=np.float32,
             ),
+            "mask": self._get_mask(car),
         }
         return obs
 
@@ -154,3 +156,27 @@ class DenbotObs:
         offsets = fourier_encoder(-np.pi, np.pi, np.array(offsets), frequencies=1, periodic=True).flatten()  # 34 * 2
         distances = norm(pad_vecs, axis=-1) / (2 * cv.BACK_WALL_Y)  # 34
         return np.concatenate((offsets, distances))  # 102
+
+    def _get_mask(self, car: Car):
+        if not car.on_ground:
+            throttle_mask = np.array([0, 0, 1])
+            pitch_mask = np.ones(5)
+            roll_mask = np.ones(3)
+            hand_break_mask = np.array([0, 1])
+        else:
+            throttle_mask = np.ones(3)
+            pitch_mask = np.array([0, 0, 1, 0, 0])
+            roll_mask = np.array([0, 1, 0])
+            hand_break_mask = np.ones(2)
+
+        steer_yaw_mask = np.ones(5)
+        if not (car.on_ground or car.has_flip):
+            jump_mask = np.array([1, 0])
+        else:
+            jump_mask = np.ones(2)
+        if car.boost_amount > 0:
+            boost_mask = np.ones(2)
+        else:
+            boost_mask = np.array([1, 0])
+
+        return np.concatenate((throttle_mask, steer_yaw_mask, pitch_mask, roll_mask, jump_mask, boost_mask, hand_break_mask)).astype("int")
