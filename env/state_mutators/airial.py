@@ -1,12 +1,14 @@
 import numpy as np
 import rlgym.rocket_league.common_values as cv
 import RocketSim as rsim
-from rlgym.rocket_league.api import Car, GameState, PhysicsObject
+from rlgym.rocket_league.api import GameState
 from rlgym.rocket_league.sim import RocketSimEngine
 from scipy.stats import triang
 
+from env.state_mutators.state_mutator import StateMutator
 
-class AirialState:
+
+class AirialState(StateMutator):
     CURRICULUM_STEPS = 100
 
     BALL_START_HEIGHT = cv.BALL_RESTING_HEIGHT + 35
@@ -27,7 +29,7 @@ class AirialState:
         max_car_height: float = 10 * 34.0,
         max_car_yeet: float = 1000,
     ) -> None:
-        self.rng = np.random.default_rng()
+        super().__init__()
         self.blue_size = blue_size
         self.orange_size = orange_size
         self.min_ball_height = min_ball_height
@@ -36,7 +38,7 @@ class AirialState:
         self.max_car_height = max_car_height
         self.max_car_yeet = max_car_yeet
 
-    def reset(self, info: dict):
+    def reset(self, info: dict) -> None:
         task = info.get("task", 0)
         self.max_ball_height = self.BALL_START_HEIGHT + task * self.BALL_HEIGHT_STEP
         self.max_car_height = self.CAR_START_HEIGHT + task * self.CAR_HEIGHT_STEP
@@ -65,24 +67,7 @@ class AirialState:
         state.ball.angular_velocity = np.zeros(3, dtype=np.float32)
         state.ball.linear_velocity = np.zeros(3, dtype=np.float32)
 
-        assert len(state.cars) == 0  # This mutator doesn't support other team size mutators
-
-        for idx in range(self.blue_size):
-            car = self._new_car()
-            car.team_num = cv.BLUE_TEAM
-            state.cars["blue-{}".format(idx)] = car
-
-        for idx in range(self.orange_size):
-            car = self._new_car()
-            car.team_num = cv.ORANGE_TEAM
-            state.cars["orange-{}".format(idx)] = car
-
-    def _new_car(self) -> Car:
-        car = Car()
-        car.hitbox_type = cv.OCTANE
-
-        car.physics = PhysicsObject()
-
+        car = self.default_car()
         x_max = cv.SIDE_WALL_X - 10 * cv.BALL_RADIUS
         y_max = cv.BACK_WALL_Y - 10 * cv.BALL_RADIUS
         car.physics.position = np.array(
@@ -93,28 +78,6 @@ class AirialState:
             ]
         )
         car.physics.linear_velocity = self.rng.uniform(low=0, high=self.max_car_yeet, size=3)
-        car.physics.angular_velocity = np.zeros(3, dtype=np.float32)
         car.physics.euler_angles = self.rng.uniform(low=0, high=2 * np.pi, size=3)
 
-        car.demo_respawn_timer = 0.0
-        car.on_ground = False
-        car.supersonic_time = 0.0
-        car.boost_amount = 0
-        car.boost_active_time = 0.0
-        car.handbrake = 0.0
-
-        car.has_jumped = False
-        car.is_holding_jump = False
-        car.is_jumping = False
-        car.jump_time = 0.0
-
-        car.has_flipped = False
-        car.has_double_jumped = False
-        car.air_time_since_jump = 0.0
-        car.flip_time = 0.0
-        car.flip_torque = np.zeros(3, dtype=np.float32)
-
-        car.is_autoflipping = False
-        car.autoflip_timer = 0.0
-        car.autoflip_direction = 0.0
-        return car
+        state.cars["blue-0"] = car

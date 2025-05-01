@@ -1,19 +1,18 @@
 import numpy as np
 import rlgym.rocket_league.common_values as cv
-from rlgym.rocket_league.api import Car, GameState, PhysicsObject
+from rlgym.rocket_league.api import GameState
 from rlgym.rocket_league.sim import RocketSimEngine
 
+from env.state_mutators.state_mutator import StateMutator
 
-class BallHunt:
+
+class BallHunt(StateMutator):
     CURRICULUM_STEPS = 10
     Y_MAX = cv.BACK_WALL_Y - cv.CORNER_CATHETUS_LENGTH
     Y_START = cv.BALL_RADIUS * 6
     X_MAX = cv.SIDE_WALL_X - cv.CORNER_CATHETUS_LENGTH
     X_START = cv.BALL_RADIUS * 6
     SPEED_MAX = cv.BALL_MAX_SPEED / 5
-
-    def __init__(self) -> None:
-        self.rng = np.random.default_rng()
 
     def reset(self, info: dict):
         task = info.get("task", 0)
@@ -41,7 +40,7 @@ class BallHunt:
         )
         state.ball.angular_velocity = np.zeros(3)
 
-        car = self._new_car()
+        car = self.default_car()
         car.team_num = cv.BLUE_TEAM
 
         ball_x, ball_y = state.ball.position[:2]
@@ -61,48 +60,11 @@ class BallHunt:
 
         state.cars["blue-0"] = car
 
-    def _new_car(self) -> Car:
-        car = Car()
-        car.hitbox_type = cv.OCTANE
 
-        car.physics = PhysicsObject()
-
-        car.physics.position = np.zeros(3)
-        car.physics.linear_velocity = np.zeros(3)
-        car.physics.angular_velocity = np.zeros(3)
-        car.physics.euler_angles = np.zeros(3)
-
-        car.demo_respawn_timer = 0.0
-        car.on_ground = False
-        car.supersonic_time = 0.0
-        car.boost_amount = 0
-        car.boost_active_time = 0.0
-        car.handbrake = 0.0
-
-        car.has_jumped = False
-        car.is_holding_jump = False
-        car.is_jumping = False
-        car.jump_time = 0.0
-
-        car.has_flipped = False
-        car.has_double_jumped = False
-        car.air_time_since_jump = 0.0
-        car.flip_time = 0.0
-        car.flip_torque = np.zeros(3, dtype=np.float32)
-
-        car.is_autoflipping = False
-        car.autoflip_timer = 0.0
-        car.autoflip_direction = 0.0
-        return car
-
-
-class SpeedFlip:
+class SpeedFlip(StateMutator):
     CURRICULUM_STEPS = 10
     SPEED_MAX = cv.BALL_MAX_SPEED / 20
     SECTOR_MAX = np.pi / 4
-
-    def __init__(self) -> None:
-        self.rng = np.random.default_rng()
 
     def reset(self, info: dict):
         task = info.get("task", 0)
@@ -132,7 +94,7 @@ class SpeedFlip:
         car_dx = car_distance * np.cos(car_angle)
         car_dy = car_distance * np.sin(car_angle)
 
-        car = self._new_car()
+        car = self.default_car()
         car.team_num = cv.BLUE_TEAM
 
         ball_x, ball_y = state.ball.position[:2]
@@ -149,37 +111,3 @@ class SpeedFlip:
         car.boost_amount = self.rng.uniform(0, 50)
 
         state.cars["blue-0"] = car
-
-    def _new_car(self) -> Car:
-        car = Car()
-        car.hitbox_type = cv.OCTANE
-
-        car.physics = PhysicsObject()
-
-        car.physics.position = np.zeros(3)
-        car.physics.linear_velocity = np.zeros(3)
-        car.physics.angular_velocity = np.zeros(3)
-        car.physics.euler_angles = np.zeros(3)
-
-        car.demo_respawn_timer = 0.0
-        car.on_ground = False
-        car.supersonic_time = 0.0
-        car.boost_amount = 0
-        car.boost_active_time = 0.0
-        car.handbrake = 0.0
-
-        car.has_jumped = False
-        car.is_holding_jump = False
-        car.is_jumping = False
-        car.jump_time = 0.0
-
-        car.has_flipped = False
-        car.has_double_jumped = False
-        car.air_time_since_jump = 0.0
-        car.flip_time = 0.0
-        car.flip_torque = np.zeros(3, dtype=np.float32)
-
-        car.is_autoflipping = False
-        car.autoflip_timer = 0.0
-        car.autoflip_direction = 0.0
-        return car

@@ -13,8 +13,10 @@ from rlgym.rocket_league.common_values import (
 )
 from rlgym.rocket_league.sim import RocketSimEngine
 
+from env.state_mutators.state_mutator import StateMutator
 
-class BoostGather:
+
+class BoostGather(StateMutator):
     def __init__(
         self,
         blue_size: int = 1,
@@ -23,14 +25,12 @@ class BoostGather:
         max_car_height: float = 10 * 34.0,
         max_car_yeet: float = 1000,
     ) -> None:
-        self.rng = np.random.default_rng()
+        super().__init__()
         self.blue_size = blue_size
         self.orange_size = orange_size
         self.min_car_height = min_car_height
         self.max_car_height = max_car_height
         self.max_car_yeet = max_car_yeet
-
-    def reset(self, info: dict): ...
 
     def apply(self, state: GameState, sim: RocketSimEngine) -> None:
         # Apply no mass
@@ -38,15 +38,7 @@ class BoostGather:
         state.ball.angular_velocity = np.zeros(3, dtype=np.float32)
         state.ball.linear_velocity = np.zeros(3, dtype=np.float32)
 
-        for idx in range(self.blue_size):
-            car = self._new_car()
-            car.team_num = BLUE_TEAM
-            state.cars["blue-{}".format(idx)] = car
-
-        for idx in range(self.orange_size):
-            car = self._new_car()
-            car.team_num = ORANGE_TEAM
-            state.cars["orange-{}".format(idx)] = car
+        state.cars[]
 
     def _new_car(self) -> Car:
         car = Car()
