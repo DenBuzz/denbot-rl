@@ -1,3 +1,5 @@
+import os
+import pathlib
 from datetime import datetime as dt
 
 import hydra
@@ -5,8 +7,6 @@ import ray
 from omegaconf import DictConfig
 from ray.tune import CheckpointConfig, RunConfig, TuneConfig, Tuner
 from ray.tune.experiment.trial import Trial
-import os
-import pathlib
 
 from conf.build_config import build_exp_config
 from training.stoppers import CurriculumStopper
@@ -18,7 +18,6 @@ def dirname_fn(trial: Trial):
 
 @hydra.main(version_base=None, config_path="conf", config_name="train")
 def main(hydra_cfg: DictConfig):
-
     current_dir = pathlib.Path(__file__).parent.resolve()
 
     algo_config = build_exp_config(hydra_cfg.exp)
