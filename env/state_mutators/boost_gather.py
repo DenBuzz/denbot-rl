@@ -38,7 +38,9 @@ class BoostGather(StateMutator):
         state.ball.angular_velocity = np.zeros(3, dtype=np.float32)
         state.ball.linear_velocity = np.zeros(3, dtype=np.float32)
 
-        state.cars[]
+        car = self._new_car()
+
+        state.cars["blue-0"] = car
 
     def _new_car(self) -> Car:
         car = Car()
