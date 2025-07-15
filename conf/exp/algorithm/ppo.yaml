@@ -13,7 +13,7 @@ training:
   vf_loss_coeff: 0.9
 
 rl_module_spec:
-  load_state_path: /home/denbuzz/src/denbot-rl/ray_results/denbot_1on0/2025-04-27-14-04-31-d4fba_00000/checkpoint_000133/learner_group/learner/rl_module/denbot
+  # load_state_path: /home/denbuzz/src/denbot-rl/ray_results/denbot_1on0/2025-04-27-14-04-31-d4fba_00000/checkpoint_000133/learner_group/learner/rl_module/denbot
   model_config:
     pi_hiddens: [1024, 1024]
     vf_hiddens: [1024, 1024]

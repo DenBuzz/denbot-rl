@@ -1,3 +1,5 @@
+import os
+import pathlib
 from datetime import datetime as dt
 
 import hydra
@@ -16,13 +18,15 @@ def dirname_fn(trial: Trial):
 
 @hydra.main(version_base=None, config_path="conf", config_name="train")
 def main(hydra_cfg: DictConfig):
+    current_dir = pathlib.Path(__file__).parent.resolve()
+
     algo_config = build_exp_config(hydra_cfg.exp)
     tuner = Tuner(
         algo_config.algo_class,
         param_space=algo_config,
         run_config=RunConfig(
             name="denbot_1on0",
-            storage_path="~/src/denbot-rl/ray_results",
+            storage_path=os.path.join(current_dir, "ray_results"),
             checkpoint_config=CheckpointConfig(
                 num_to_keep=5,
                 checkpoint_frequency=10,
