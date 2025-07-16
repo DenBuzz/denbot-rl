@@ -1,0 +1,3 @@
+[submodule "rlviser_repo"]
+	path = rlviser_repo
+	url = git@github.com:VirxEC/rlviser.git
