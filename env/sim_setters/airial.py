@@ -5,7 +5,7 @@ from rlgym.rocket_league.api import GameState
 from rlgym.rocket_league.sim import RocketSimEngine
 from scipy.stats import triang
 
-from env.state_mutators.state_mutator import StateMutator
+from env.sim_setters.state_mutator import StateMutator
 
 
 class AirialState(StateMutator):

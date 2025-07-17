@@ -1,20 +1,15 @@
-from abc import abstractmethod
-
 import numpy as np
 import rlgym.rocket_league.common_values as cv
-from rlgym.rocket_league.api import Car, GameState, PhysicsObject
-from rlgym.rocket_league.sim import RocketSimEngine
+from rlgym.rocket_league.api import Car, PhysicsObject
+
+from env.env_components import SimulationSetter
 
 
-class StateMutator:
+class RocketSimSetter(SimulationSetter):
     def __init__(self) -> None:
         self.rng = np.random.default_rng()
-        pass
 
     def reset(self, info: dict) -> None: ...
-
-    @abstractmethod
-    def apply(self, state: GameState, sim: RocketSimEngine) -> None: ...
 
     def default_car(self) -> Car:
         car = Car()

@@ -141,15 +141,6 @@ wheels = [
 ]
 
 [[package]]
-name = "cmeel"
-version = "0.57.3"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/6e/ef/0990977bdcb1ffde571f8a0d70c8ad350abe4e398cc09fecabb3e13a8954/cmeel-0.57.3.tar.gz", hash = "sha256:7794a5c3d3365b5ed1db8ab0c152fabfc73af79a3edd6ff8bc2f1405c667dd7f", size = 14884, upload-time = "2025-03-19T15:29:10.298Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/87/df/634f09c1d2712a6e7b804a5630b0f16f219f6f9c8e1286f3265ca8bdf1ca/cmeel-0.57.3-py3-none-any.whl", hash = "sha256:231d24bb97beae67e3682f026a53e49e227c174e6a3329a9dcb850e5566529b0", size = 20986, upload-time = "2025-03-19T15:29:09.145Z" },
-]
-
-[[package]]
 name = "colorama"
 version = "0.4.6"
 source = { registry = "https://pypi.org/simple" }
@@ -304,7 +295,7 @@ requires-dist = [
     { name = "pytest", specifier = ">=8.3.5" },
     { name = "ray", extras = ["rllib"], specifier = ">=2.43.0" },
     { name = "rlgym", extras = ["all"], specifier = ">=2.0.0" },
-    { name = "rocketsim", specifier = ">=2.1.1.post1" },
+    { name = "rocketsim", specifier = "==2.1.1.post1" },
     { name = "ruff", specifier = ">=0.11.0" },
     { name = "streamlit", specifier = ">=1.44.1" },
     { name = "tensorboard", specifier = ">=2.19.0" },
@@ -1564,16 +1555,16 @@ wheels = [
 
 [[package]]
 name = "rocketsim"
-version = "2.1.1.post4"
+version = "2.1.1.post1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cmeel" },
     { name = "numpy" },
 ]
+sdist = { url = "https://files.pythonhosted.org/packages/6c/fb/296c782b75379aa83a19ac7afd4b651d1d9955f3c88a744a7bbbaf2f1e0d/RocketSim-2.1.1.post1.tar.gz", hash = "sha256:2df7af8cddef4ef988cbbfa67ddc5bba11b65dc1155e1ce79ce29608d25336a8", size = 533673, upload-time = "2024-06-05T00:51:18.647Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bf/99/603c7bca87b4e13a6ccfd3b5f1e0006d4be81a4590da1cd1039e63c9becf/rocketsim-2.1.1.post4-0-cp39-abi3-macosx_13_0_x86_64.whl", hash = "sha256:e98521a91a0c18e898d24782a38ad8b13232c2f153cd697451de5afe6c9f996e", size = 389859, upload-time = "2025-05-11T20:11:49.363Z" },
-    { url = "https://files.pythonhosted.org/packages/a4/d3/a120fa1c02cc5ca04884c4f47a00171fe52fee781c0cdff98e2c8f9887ad/rocketsim-2.1.1.post4-0-cp39-abi3-manylinux2014_x86_64.whl", hash = "sha256:ed7c30964e4b88d08efea52f0d3b65e9e7a777a7b73d814fb9966621e4336ac5", size = 653334, upload-time = "2025-05-11T20:11:51.216Z" },
-    { url = "https://files.pythonhosted.org/packages/68/97/50016d6c4432e9484266109678bf167bcea656e50f1be461b17d5fb8204a/rocketsim-2.1.1.post4-0-cp39-abi3-win_amd64.whl", hash = "sha256:4655b206606d492022a01fba677de8e0ac882fe6f498a213e35dd4e1b41d1f38", size = 377561, upload-time = "2025-05-11T20:11:52.937Z" },
+    { url = "https://files.pythonhosted.org/packages/04/5c/00267bc36633f7a92da9416394b457d1bff71ff9df76364e33501be7e7c2/RocketSim-2.1.1.post1-cp34-abi3-macosx_11_0_x86_64.whl", hash = "sha256:35add482957579536d7bcd749e24f40a0fce815708b904e0b71c8125ee933fb6", size = 377343, upload-time = "2024-06-05T00:51:13.02Z" },
+    { url = "https://files.pythonhosted.org/packages/53/26/7957e28ab78d0be9fad637220fab5fd699efa35aeccd0cbd7e1a44d0e483/RocketSim-2.1.1.post1-cp34-abi3-manylinux2014_x86_64.whl", hash = "sha256:95f5d2dbd4de9c6245eb44b13121687e5e8e67ef9d4c8e943de1b515f873ad40", size = 639418, upload-time = "2024-06-05T00:51:15.141Z" },
+    { url = "https://files.pythonhosted.org/packages/75/d7/efd2fd7fdf3384dd358211345f7e79b15538c93b8d404e9c2ab4b3b0ae03/RocketSim-2.1.1.post1-cp34-abi3-win_amd64.whl", hash = "sha256:8dd8c53a0333c482ab2b948d2f2b04aee713e749fd51cae87a8756129d9d4528", size = 397877, upload-time = "2024-06-05T00:51:17.037Z" },
 ]
 
 [[package]]

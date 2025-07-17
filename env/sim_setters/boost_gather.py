@@ -13,7 +13,7 @@ from rlgym.rocket_league.common_values import (
 )
 from rlgym.rocket_league.sim import RocketSimEngine
 
-from env.state_mutators.state_mutator import StateMutator
+from env.sim_setters.state_mutator import StateMutator
 
 
 class BoostGather(StateMutator):

@@ -3,17 +3,22 @@ import rlgym.rocket_league.common_values as cv
 from rlgym.rocket_league.api import GameState
 from rlgym.rocket_league.sim import RocketSimEngine
 
-from env.state_mutators.state_mutator import StateMutator
+from env.sim_setters.rocket_sim_setter import RocketSimSetter
 
 
-class WallAirDribble(StateMutator):
+class WallAirDribble(RocketSimSetter):
     SIDE_WALL_MAX_Y = cv.BACK_WALL_Y - cv.CORNER_CATHETUS_LENGTH
 
     def reset(self, info: dict):
         # task = info.get("task", 0)
         pass
 
-    def apply(self, state: GameState, sim: RocketSimEngine) -> None:
+    @property
+    def agents(self) -> list[str]:
+        return ["blue-0"]
+
+    def apply(self, sim: RocketSimEngine) -> None:
+        state: GameState = sim.create_base_state()
         ball_x = cv.SIDE_WALL_X - 4 * (2 * cv.BALL_RADIUS)
         if self.rng.random() > 0.5:
             # reflect sometimes
@@ -54,7 +59,8 @@ class FieldAirDribble(WallAirDribble):
     def __init__(self) -> None:
         super().__init__()
 
-    def apply(self, state: GameState, sim: RocketSimEngine) -> None:
+    def apply(self, sim: RocketSimEngine) -> None:
+        state: GameState = sim.create_base_state()
         ball_x = self.rng.uniform(-cv.SIDE_WALL_X + cv.CORNER_CATHETUS_LENGTH, cv.SIDE_WALL_X - cv.CORNER_CATHETUS_LENGTH)
         ball_y = self.rng.uniform(-cv.BACK_WALL_Y + cv.CORNER_CATHETUS_LENGTH, cv.BACK_WALL_Y - cv.CORNER_CATHETUS_LENGTH)
 

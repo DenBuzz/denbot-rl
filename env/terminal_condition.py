@@ -3,19 +3,21 @@ from collections import defaultdict
 from rlgym.rocket_league.api import GameState
 from rlgym.rocket_league.common_values import TICKS_PER_SECOND
 
+from env.env_components import TerminalCondition
 
-class AnyCondition:
+
+class AnyCondition(TerminalCondition):
     def __init__(self, conditions) -> None:
-        self.conditions = conditions
+        self.conditions: list[TerminalCondition] = conditions
 
     def reset(self, info: dict):
         for cond in self.conditions:
             cond.reset(info)
 
-    def is_done(self, agents: list[str], state: GameState) -> dict[str, bool]:
-        combined_dones = {agent: False for agent in agents}
+    def is_done(self, state: GameState) -> dict[str, bool]:
+        combined_dones = {agent: False for agent in state.cars}
         for condition in self.conditions:
-            dones = condition.is_done(agents, state)
+            dones = condition.is_done(state)
             for agent, done in dones.items():
                 combined_dones[agent] |= done
 
@@ -62,7 +64,7 @@ class BallTouchTermination:
         return {agent: state.cars[agent].ball_touches > 0 for agent in agents}
 
 
-class CarInFront:
+class CarInFront(TerminalCondition):
     """Terminate when car leads the ball"""
 
     def __init__(self, buffer: float):
@@ -70,8 +72,8 @@ class CarInFront:
 
     def reset(self, info: dict): ...
 
-    def is_done(self, agents: list[str], state: GameState) -> dict[str, bool]:
-        return {agent: state.cars[agent].physics.position[1] - state.ball.position[1] > self.buffer for agent in agents}
+    def is_done(self, state: GameState) -> dict[str, bool]:
+        return {agent: car.physics.position[1] - state.ball.position[1] > self.buffer for agent, car in state.cars.items()}
 
 
 class NoFlip:
@@ -93,7 +95,7 @@ class NoFlip:
         return {agent: not self.car_flipped[agent] for agent in agents}
 
 
-class BallMinHeight:
+class BallMinHeight(TerminalCondition):
     """Terminate on the ball dropping below given height"""
 
     def __init__(self, height: float, delay: float = 1.0):
@@ -102,10 +104,10 @@ class BallMinHeight:
 
     def reset(self, info: dict): ...
 
-    def is_done(self, agents: list[str], state: GameState) -> dict[str, bool]:
+    def is_done(self, state: GameState) -> dict[str, bool]:
         if state.tick_count / TICKS_PER_SECOND < self.delay:
-            return {agent: False for agent in agents}
-        return {agent: state.ball.position[2] < self.height for agent in agents}
+            return {agent: False for agent in state.cars}
+        return {agent: state.ball.position[2] < self.height for agent in state.cars}
 
 
 class CarMinHeight:
@@ -155,12 +157,12 @@ class NegativeY:
         return {agent: done for agent in agents}
 
 
-class GoalCondition:
+class GoalCondition(TerminalCondition):
     """
     A DoneCondition that is satisfied when a goal is scored.
     """
 
     def reset(self, info: dict) -> None: ...
 
-    def is_done(self, agents: list[str], state: GameState) -> dict[str, bool]:
-        return {agent: state.goal_scored for agent in agents}
+    def is_done(self, state: GameState) -> dict[str, bool]:
+        return {agent: state.goal_scored for agent in state.cars}

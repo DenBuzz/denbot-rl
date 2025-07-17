@@ -1,15 +1,13 @@
-import os
-import pathlib
 from datetime import datetime as dt
 
 import hydra
 import ray
-from omegaconf import DictConfig
-from ray.tune import CheckpointConfig, RunConfig, TuneConfig, Tuner
+from hydra.utils import instantiate
+from omegaconf import DictConfig, OmegaConf
+from ray.tune import CheckpointConfig, RunConfig, Tuner
 from ray.tune.experiment.trial import Trial
 
-from conf.build_config import build_exp_config
-from training.stoppers import CurriculumStopper
+from rllib.build_config import build_algorithm_config
 
 
 def dirname_fn(trial: Trial):
@@ -17,28 +15,22 @@ def dirname_fn(trial: Trial):
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="train")
-def main(hydra_cfg: DictConfig):
-    current_dir = pathlib.Path(__file__).parent.resolve()
+def main(cfg: DictConfig):
+    config: dict = OmegaConf.to_container(instantiate(cfg))
+    exp_config = config["exp"]
+    exp_config["algorithm"] = build_algorithm_config(exp_config["algorithm"])
 
-    algo_config = build_exp_config(hydra_cfg.exp)
+    checkpoint_config = CheckpointConfig(**exp_config["run_config"].pop("checkpoint_config", {}))
+    exp_config["run_config"] = RunConfig(**exp_config["run_config"], checkpoint_config=checkpoint_config)
+
+    # ray.init(**exp_config["ray_init"])
+    ray.init(local_mode=True)
     tuner = Tuner(
-        algo_config.algo_class,
-        param_space=algo_config,
-        run_config=RunConfig(
-            name="denbot_1on0",
-            storage_path=os.path.join(current_dir, "ray_results"),
-            checkpoint_config=CheckpointConfig(
-                num_to_keep=5,
-                checkpoint_frequency=10,
-                checkpoint_at_end=True,
-            ),
-            stop=CurriculumStopper(),
-        ),
-        tune_config=TuneConfig(num_samples=1, trial_dirname_creator=dirname_fn),
+        exp_config["algorithm"]["algo_class"],
+        param_space=exp_config["algorithm"],
+        run_config=exp_config["run_config"],
     )
-
-    ray.init(**hydra_cfg.ray_init)
-    return tuner.fit()
+    tuner.fit()
 
 
 if __name__ == "__main__":

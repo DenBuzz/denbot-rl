@@ -4,12 +4,14 @@ import numpy as np
 import rlgym.rocket_league.common_values as cv
 from rlgym.rocket_league.api import Car, GameState, PhysicsObject
 
+from env.env_components import RewardFunction
+
 BOOST_LOCATIONS = np.array(cv.BOOST_LOCATIONS)
 BOOST_PAD_AMOUNTS = 12 * np.ones(BOOST_LOCATIONS.shape[0])
 BOOST_PAD_AMOUNTS[[3, 4, 15, 18, 29, 30]] = 100
 
 
-class DenBotReward:
+class DenBotReward(RewardFunction):
     def __init__(
         self,
         goal_scored: float = 0,
@@ -83,34 +85,37 @@ class DenBotReward:
         self._agent_boosts = defaultdict(float)
         info["reward_weights"] = self.reward_weights
 
-    def apply(self, agent: str, state: GameState) -> float:
-        car = state.cars[agent]
-        if car.team_num == cv.ORANGE_TEAM:
-            car_phys = car.inverted_physics
-            ball = state.inverted_ball
-        else:
-            car_phys = car.physics
-            ball = state.ball
+    def get_reward(self, state: GameState) -> dict[str, float]:
+        rewards = {}
+        for agent, car in state.cars.items():
+            car = state.cars[agent]
+            if car.team_num == cv.ORANGE_TEAM:
+                car_phys = car.inverted_physics
+                ball = state.inverted_ball
+            else:
+                car_phys = car.physics
+                ball = state.ball
 
-        reward_inputs = (agent, car, car_phys, ball, state)
+            reward_inputs = (agent, car, car_phys, ball, state)
 
-        reward = (
-            self._goal_scored(*reward_inputs) * self.goal_scored
-            + self._boost_collect(*reward_inputs) * self.boost_collect
-            + self._full_boost(*reward_inputs) * self.full_boost
-            + self._ball_touch(*reward_inputs) * self.ball_touch
-            + self._distance_player_ball(*reward_inputs) * self.distance_player_ball
-            + self._offensive_angle(*reward_inputs) * self.offensive_angle
-            + self._facing_ball(*reward_inputs) * self.facing_ball
-            + self._velocity_player_to_ball(*reward_inputs) * self.velocity_player_to_ball
-            + self._velocity_ball_goal(*reward_inputs) * self.velocity_ball_goal
-            + self._velocity(*reward_inputs) * self.velocity
-            + self._boost_amount(*reward_inputs) * self.boost_amount
-            + self._boost_proximity(*reward_inputs) * self.boost_proximity
-        )
+            reward = (
+                self._goal_scored(*reward_inputs) * self.goal_scored
+                + self._boost_collect(*reward_inputs) * self.boost_collect
+                + self._full_boost(*reward_inputs) * self.full_boost
+                + self._ball_touch(*reward_inputs) * self.ball_touch
+                + self._distance_player_ball(*reward_inputs) * self.distance_player_ball
+                + self._offensive_angle(*reward_inputs) * self.offensive_angle
+                + self._facing_ball(*reward_inputs) * self.facing_ball
+                + self._velocity_player_to_ball(*reward_inputs) * self.velocity_player_to_ball
+                + self._velocity_ball_goal(*reward_inputs) * self.velocity_ball_goal
+                + self._velocity(*reward_inputs) * self.velocity
+                + self._boost_amount(*reward_inputs) * self.boost_amount
+                + self._boost_proximity(*reward_inputs) * self.boost_proximity
+            )
 
-        self._agent_boosts[agent] = car.boost_amount
-        return reward
+            self._agent_boosts[agent] = car.boost_amount
+            rewards[agent] = reward
+        return rewards
 
     def _goal_scored(self, agent: str, car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
         if not state.goal_scored:

@@ -1,105 +1,79 @@
-from collections import defaultdict
-from typing import Any
-
-import numpy as np
 from ray.rllib.env import MultiAgentEnv
-from ray.rllib.utils.typing import MultiAgentDict
+from ray.rllib.utils.typing import AgentID, MultiAgentDict
 from rlgym.rocket_league.api import GameState
 from rlgym.rocket_league.rlviser import RLViserRenderer
 from rlgym.rocket_league.sim import RocketSimEngine
 
-from env.action_parser import SeerAction
-from env.denbot_obs import DenbotObs
-from env.denbot_reward import DenBotReward
+from env.env_components import ActionParser, ObsBuilder, RewardFunction, SimulationSetter, TerminalCondition
 
 
 class RLEnv(MultiAgentEnv):
-    """
-    The main RLGym class. This class is responsible for managing the environment and the interactions between
-    the different components of the environment. It is the main interface for the user to interact with an environment.
-    """
+    agents: list[AgentID]
+    possible_agents: list[AgentID]
 
-    def __init__(self, config):
+    sim: RocketSimEngine
+    state: GameState
+    obs_builder: ObsBuilder
+    action_parser: ActionParser
+    sim_setter: SimulationSetter
+    reward_function: RewardFunction
+    termination_condition: TerminalCondition
+    truncation_condition: TerminalCondition
+    renderer: RLViserRenderer
+
+    def __init__(self, config: dict):
         super().__init__()
         self.config = config
-        self.envs = config["envs"]
-        self.curriculum = config["curriculum"]
-        self.meta_task = 0
-        self.env_tasks = defaultdict(int)
-
-        self.obs_builder = DenbotObs()
-        self.action_parser = SeerAction(repeats=8)
-        self.renderer = RLViserRenderer()
-
-        self.sim = RocketSimEngine()
+        self.load_config(config=config)
         self.possible_agents = []
-        for i in range(3):
+        for i in range(4):
             self.possible_agents.append(f"blue-{i}")
             self.possible_agents.append(f"orange-{i}")
+        self.agents = self.sim_setter.agents
+        self.observation_spaces = self.obs_builder.observation_space
+        self.action_spaces = self.action_parser.action_space
+        self.renderer = RLViserRenderer()
 
-        self.action_spaces = {agent: self.action_parser.get_action_space(agent) for agent in self.possible_agents}
-        self.observation_spaces = {agent: self.obs_builder.get_obs_space(agent) for agent in self.possible_agents}
+    def reset(self, *, seed: int | None = None, options: dict | None = None) -> tuple[MultiAgentDict, MultiAgentDict]:
+        super().reset(seed=seed, options=options)
+        info = {}
+        self.sim_setter.reset(info)
+        self.obs_builder.reset(info)
+        self.action_parser.reset(info)
+        self.reward_function.reset(info)
+        self.termination_condition.reset(info)
+        self.truncation_condition.reset(info)
 
-    @property
-    def state(self) -> GameState:
-        return self.sim.state
-
-    def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None):
-        self._load_task()
-        self.state_mutator.reset(self.shared_info)
-        self.reward_fn.reset(self.shared_info)
-        self.termination_cond.reset(self.shared_info)
-        self.truncation_cond.reset(self.shared_info)
-        self.obs_builder.reset(self.shared_info)
-
-        initial_state = self.sim.create_base_state()
-        self.state_mutator.apply(initial_state, self.sim)
-        state = self.sim.set_state(initial_state, {})
-
-        agents = self.agents = self.sim.agents
-        return self.obs_builder.build_obs(agents, state), {}
+        self.state = self.sim_setter.apply(self.sim)
+        self.agents = self.sim_setter.agents
+        obs = self.obs_builder.build_obs(state=self.state)
+        return obs, {}
 
     def step(self, action_dict: MultiAgentDict) -> tuple[MultiAgentDict, MultiAgentDict, MultiAgentDict, MultiAgentDict, MultiAgentDict]:
-        engine_actions = self.action_parser.parse_actions(action_dict, self.state)
-        new_state = self.sim.step(engine_actions, {})
-        agents = self.agents
-        obs = self.obs_builder.build_obs(agents, new_state)
-        is_terminated = self.termination_cond.is_done(agents, new_state)
-        if all(is_terminated.values()):
-            is_terminated["__all__"] = True
-        else:
-            is_terminated["__all__"] = False
-        is_truncated = self.truncation_cond.is_done(agents, new_state)
-        if all(is_truncated.values()):
-            is_truncated["__all__"] = True
-        else:
-            is_truncated["__all__"] = False
-        rewards = {agent: self.reward_fn.apply(agent, new_state) for agent in agents}
-        return obs, rewards, is_terminated, is_truncated, {}
+        engine_actions = self.action_parser.parse_action(action_dict=action_dict)
+        self.state = self.sim.step(actions=engine_actions, shared_info={})
+        obs = self.obs_builder.build_obs(state=self.state)
 
-    def _load_task(self) -> None:
-        meta_task_config = self.curriculum["tasks"][self.meta_task]
-        next_env = np.random.choice(meta_task_config["envs"])
-        env_config = self.envs[next_env]
+        is_terminated = self.termination_condition.is_done(state=self.state)
+        is_terminated["__all__"] = all(is_terminated.values())
 
-        self.shared_info = {"task": self.env_tasks[next_env], "env": next_env}
+        is_truncated = self.truncation_condition.is_done(state=self.state)
+        is_truncated["__all__"] = all(is_truncated.values())
 
-        self.state_mutator = env_config["state_mutator"]
-        self.termination_cond = env_config["termination_cond"]
-        self.truncation_cond = env_config["truncation_cond"]
-        self.reward_fn = DenBotReward(**env_config["rewards"])
+        rewards = self.reward_function.get_reward(state=self.state)
+        return obs, rewards, is_terminated, is_truncated, info
 
-    def render(self) -> Any:
-        self.renderer.render(self.state, {})
-        return True
+    def load_config(self, config: dict) -> None:
+        self.config.update(config)
+        self.obs_builder = self.config["obs_builder"]
+        self.action_parser = self.config["action_parser"]
+        self.sim_setter = self.config["sim_setter"]
+        self.reward_function = self.config["reward_function"]
+        self.termination_condition = self.config["termination_condition"]
+        self.truncation_condition = self.config["truncation_condition"]
 
-    def set_tasks(self, task: int, tasks: dict[str, int] | None = None) -> None:
-        if tasks:
-            self.env_tasks = defaultdict(int)
-            self.env_tasks.update(tasks)
-        self.meta_task = task
-
-    def close(self) -> None:
+    def close(self):
         self.sim.close()
-        if self.renderer is not None:
-            self.renderer.close()
+
+    def render(self) -> None:
+        return self.renderer.render(self.state, {})

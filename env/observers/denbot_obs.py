@@ -5,9 +5,10 @@ from numpy.linalg import norm
 from rlgym.rocket_league.api import Car, GameState, PhysicsObject
 
 from env.encoders import binary_encoder, encode_position, fourier_encoder, planar_angle
+from env.env_components import ObsBuilder
 
 
-class DenbotObs:
+class DenbotObs(ObsBuilder):
     """
     The default observation builder.
     """
@@ -18,8 +19,9 @@ class DenbotObs:
     def reset(self, info: dict):
         self.reward_weights = info["reward_weights"]  # 19
 
-    def get_obs_space(self, agent: str) -> gym.Space:
-        return gym.spaces.Dict(
+    @property
+    def observation_space(self) -> dict[str, gym.Space]:
+        space = gym.spaces.Dict(
             {
                 "rewards": gym.spaces.Box(-100, 100, shape=(19,)),
                 "pads": gym.spaces.Box(-100, 100, shape=(34,)),
@@ -28,10 +30,11 @@ class DenbotObs:
                 "mask": gym.spaces.MultiBinary(n=22),
             }
         )
+        return {f"{side}-{i}": space for i in range(3) for side in ["blue", "orange"]}
 
-    def build_obs(self, agents: list[str], state: GameState) -> dict[str, np.ndarray]:
+    def build_obs(self, state: GameState) -> dict[str, np.ndarray]:
         obs = {}
-        for agent in agents:
+        for agent in state.cars:
             obs[agent] = self._build_agent_obs(agent, state)
 
         return obs
