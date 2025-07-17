@@ -15,8 +15,7 @@ def build_algorithm_config(config: dict):
     algo_config: AlgorithmConfig = config.pop("base_config")
     algo_config.environment(env=RLEnv)
 
-    rl_module_config = config.pop("rl_modules", None)
-    if rl_module_config is not None:
+    if rl_module_config := config.pop("rl_modules", None):
         mrlm = MultiRLModuleSpec(rl_module_specs={key: RLModuleSpec(module_class=val) for key, val in rl_module_config.items()})
         algo_config.rl_module(rl_module_spec=mrlm)
 

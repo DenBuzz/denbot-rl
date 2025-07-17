@@ -1,5 +1,5 @@
 defaults:
-  - exp: base
+  - exp: default
   - _self_
 
   - override hydra/hydra_logging: disabled

@@ -23,8 +23,7 @@ def main(cfg: DictConfig):
     checkpoint_config = CheckpointConfig(**exp_config["run_config"].pop("checkpoint_config", {}))
     exp_config["run_config"] = RunConfig(**exp_config["run_config"], checkpoint_config=checkpoint_config)
 
-    # ray.init(**exp_config["ray_init"])
-    ray.init(local_mode=True)
+    ray.init(**exp_config["ray_init"])
     tuner = Tuner(
         exp_config["algorithm"]["algo_class"],
         param_space=exp_config["algorithm"],

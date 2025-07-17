@@ -17,7 +17,7 @@ class WallAirDribble(RocketSimSetter):
     def agents(self) -> list[str]:
         return ["blue-0"]
 
-    def apply(self, sim: RocketSimEngine) -> None:
+    def apply(self, sim: RocketSimEngine) -> GameState:
         state: GameState = sim.create_base_state()
         ball_x = cv.SIDE_WALL_X - 4 * (2 * cv.BALL_RADIUS)
         if self.rng.random() > 0.5:
@@ -53,13 +53,15 @@ class WallAirDribble(RocketSimSetter):
         car.boost_amount = 100
 
         state.cars["blue-0"] = car
+        sim.set_state(state, {})
+        return state
 
 
 class FieldAirDribble(WallAirDribble):
     def __init__(self) -> None:
         super().__init__()
 
-    def apply(self, sim: RocketSimEngine) -> None:
+    def apply(self, sim: RocketSimEngine) -> GameState:
         state: GameState = sim.create_base_state()
         ball_x = self.rng.uniform(-cv.SIDE_WALL_X + cv.CORNER_CATHETUS_LENGTH, cv.SIDE_WALL_X - cv.CORNER_CATHETUS_LENGTH)
         ball_y = self.rng.uniform(-cv.BACK_WALL_Y + cv.CORNER_CATHETUS_LENGTH, cv.BACK_WALL_Y - cv.CORNER_CATHETUS_LENGTH)
@@ -92,3 +94,5 @@ class FieldAirDribble(WallAirDribble):
         car.boost_amount = 100
 
         state.cars["blue-0"] = car
+        sim.set_state(state, {})
+        return state

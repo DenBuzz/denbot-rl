@@ -26,21 +26,22 @@ class RLEnv(MultiAgentEnv):
         self.config = config
         self.load_config(config=config)
         self.possible_agents = []
-        for i in range(4):
+        for i in range(3):
             self.possible_agents.append(f"blue-{i}")
             self.possible_agents.append(f"orange-{i}")
         self.agents = self.sim_setter.agents
         self.observation_spaces = self.obs_builder.observation_space
         self.action_spaces = self.action_parser.action_space
+        self.sim = RocketSimEngine()
         self.renderer = RLViserRenderer()
 
     def reset(self, *, seed: int | None = None, options: dict | None = None) -> tuple[MultiAgentDict, MultiAgentDict]:
         super().reset(seed=seed, options=options)
         info = {}
         self.sim_setter.reset(info)
+        self.reward_function.reset(info)
         self.obs_builder.reset(info)
         self.action_parser.reset(info)
-        self.reward_function.reset(info)
         self.termination_condition.reset(info)
         self.truncation_condition.reset(info)
 
@@ -61,7 +62,7 @@ class RLEnv(MultiAgentEnv):
         is_truncated["__all__"] = all(is_truncated.values())
 
         rewards = self.reward_function.get_reward(state=self.state)
-        return obs, rewards, is_terminated, is_truncated, info
+        return obs, rewards, is_terminated, is_truncated, {}
 
     def load_config(self, config: dict) -> None:
         self.config.update(config)
