@@ -2,6 +2,7 @@ import argparse
 from pathlib import Path
 from time import sleep, time
 
+import rlviser_py
 from hydra import compose, initialize
 from hydra.utils import instantiate
 from omegaconf import OmegaConf
@@ -37,7 +38,9 @@ def create_env(exp: str):
 
 def load_components_from_checkpoint(path) -> tuple[RLModule, EnvToModulePipeline, ModuleToEnvPipeline]:
     rl_module = RLModule.from_checkpoint(Path(path, COMPONENT_LEARNER_GROUP, COMPONENT_LEARNER, COMPONENT_RL_MODULE))
-    env_to_module = EnvToModulePipeline.from_checkpoint(Path(path, COMPONENT_ENV_RUNNER, COMPONENT_ENV_TO_MODULE_CONNECTOR))
+    env_to_module = EnvToModulePipeline.from_checkpoint(
+        Path(path, COMPONENT_ENV_RUNNER, COMPONENT_ENV_TO_MODULE_CONNECTOR)
+    )
     module_to_env = ModuleToEnvPipeline.from_checkpoint(
         Path(
             path,
@@ -48,7 +51,9 @@ def load_components_from_checkpoint(path) -> tuple[RLModule, EnvToModulePipeline
     return rl_module, env_to_module, module_to_env
 
 
-def run_episode(env: RLEnv, rl_module: RLModule, env_to_module: EnvToModulePipeline, module_to_env: ModuleToEnvPipeline):
+def run_episode(
+    env: RLEnv, rl_module: RLModule, env_to_module: EnvToModulePipeline, module_to_env: ModuleToEnvPipeline
+):
     obs, _ = env.reset()
     # env.render()
     start_time = time()
@@ -61,7 +66,9 @@ def run_episode(env: RLEnv, rl_module: RLModule, env_to_module: EnvToModulePipel
         shared_data = {}
         input_dict = env_to_module(episodes=[episode], rl_module=rl_module, explore=False, shared_data=shared_data)
         rl_module_out = rl_module.forward_inference(input_dict)
-        to_env = module_to_env(batch=rl_module_out, episodes=[episode], rl_module=rl_module, explore=True, shared_data=shared_data)
+        to_env = module_to_env(
+            batch=rl_module_out, episodes=[episode], rl_module=rl_module, explore=True, shared_data=shared_data
+        )
         action = to_env.pop(Columns.ACTIONS)[0]
         obs, reward, terminated, truncated, _ = env.step(action)
         episode.add_env_step(obs, action, reward, terminateds=terminated, truncateds=truncated)
@@ -90,3 +97,4 @@ if __name__ == "__main__":
 
     rl_module, env_to_module, module_to_env = load_components_from_checkpoint(args.checkpoint)
     run_episode(env, rl_module, env_to_module, module_to_env)
+    rlviser_py.quit()

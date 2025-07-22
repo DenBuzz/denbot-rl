@@ -3,8 +3,9 @@ import os
 from pathlib import Path
 from time import sleep, time
 
-import torch
 from hydra import compose, initialize
+from hydra.utils import instantiate
+from omegaconf import OmegaConf
 from ray.rllib.connectors.env_to_module import EnvToModulePipeline
 from ray.rllib.connectors.module_to_env import ModuleToEnvPipeline
 from ray.rllib.core import (
@@ -19,17 +20,25 @@ from ray.rllib.core import (
 from ray.rllib.core.rl_module import RLModule
 from ray.rllib.env.multi_agent_episode import MultiAgentEpisode
 
-from conf.build_config import build_exp_config, mapping_fn
 from env.env import RLEnv
+from rllib.build_config import build_algorithm_config, denbot_map
 
 
 def create_env(exp: str):
     with initialize(version_base=None, config_path="conf"):
         cfg = compose(config_name="train", overrides=[f"exp={exp}"])
+    config: dict = OmegaConf.to_container(instantiate(cfg))
+    exp_config = config["exp"]
+    exp_config["algorithm"] = build_algorithm_config(exp_config["algorithm"])
 
-    cfg = build_exp_config(cfg.exp)
+    return RLEnv(exp_config["algorithm"].env_config)
 
-    return RLEnv(cfg.env_config)
+
+def get_scenarios():
+    with initialize(version_base=None, config_path="conf"):
+        cfg = compose(config_name="train")
+
+    return cfg.scenarios
 
 
 def get_most_recent_checkpoint() -> Path:
@@ -43,7 +52,9 @@ def get_most_recent_checkpoint() -> Path:
 
 def load_components_from_checkpoint(path) -> tuple[RLModule, EnvToModulePipeline, ModuleToEnvPipeline]:
     rl_module = RLModule.from_checkpoint(Path(path, COMPONENT_LEARNER_GROUP, COMPONENT_LEARNER, COMPONENT_RL_MODULE))
-    env_to_module = EnvToModulePipeline.from_checkpoint(Path(path, COMPONENT_ENV_RUNNER, COMPONENT_ENV_TO_MODULE_CONNECTOR))
+    env_to_module = EnvToModulePipeline.from_checkpoint(
+        Path(path, COMPONENT_ENV_RUNNER, COMPONENT_ENV_TO_MODULE_CONNECTOR)
+    )
     module_to_env = ModuleToEnvPipeline.from_checkpoint(
         Path(
             path,
@@ -54,22 +65,14 @@ def load_components_from_checkpoint(path) -> tuple[RLModule, EnvToModulePipeline
     return rl_module, env_to_module, module_to_env
 
 
-def sample_action(action_dist_inputs, space):
-    action = []
-    i = 0
-    for n_logits in space.nvec:
-        action.append(torch.distributions.Categorical(logits=action_dist_inputs[i : i + n_logits]).sample())
-        i += n_logits
-    return action
-
-
-def run_episode(env: RLEnv, rl_module: RLModule, env_to_module: EnvToModulePipeline, module_to_env: ModuleToEnvPipeline):
+def run_episode(
+    env: RLEnv, rl_module: RLModule, env_to_module: EnvToModulePipeline, module_to_env: ModuleToEnvPipeline
+):
     obs, _ = env.reset()
-    env.render()
     start_time = time()
     episode = MultiAgentEpisode(
         observations=[obs],
-        agent_to_module_mapping_fn=mapping_fn,
+        agent_to_module_mapping_fn=denbot_map,
         # observation_space=env.observation_space,
         # action_space=env.action_space,
     )
@@ -79,7 +82,9 @@ def run_episode(env: RLEnv, rl_module: RLModule, env_to_module: EnvToModulePipel
         shared_data = {}
         input_dict = env_to_module(episodes=[episode], rl_module=rl_module, explore=False, shared_data=shared_data)
         rl_module_out = rl_module.forward_inference(input_dict)
-        to_env = module_to_env(batch=rl_module_out, episodes=[episode], rl_module=rl_module, explore=True, shared_data=shared_data)
+        to_env = module_to_env(
+            batch=rl_module_out, episodes=[episode], rl_module=rl_module, explore=True, shared_data=shared_data
+        )
         action = to_env.pop(Columns.ACTIONS)[0]
 
         obs, reward, terminated, truncated, _ = env.step(action)
@@ -91,9 +96,9 @@ def run_episode(env: RLEnv, rl_module: RLModule, env_to_module: EnvToModulePipel
 
 
 if __name__ == "__main__":
-    env = create_env("offense")
-    env.set_tasks(0, {"speed_flip": 10, "ball_hunt": 10, "shooting": 50})
-    while True:
-        most_recent_checkpoint = get_most_recent_checkpoint()
-        rl_module, env_to_module, module_to_env = load_components_from_checkpoint(most_recent_checkpoint)
-        run_episode(env, rl_module, env_to_module, module_to_env)
+    # env = create_env("just_air_dribble")
+    # while True:
+    #     most_recent_checkpoint = get_most_recent_checkpoint()
+    #     rl_module, env_to_module, module_to_env = load_components_from_checkpoint(most_recent_checkpoint)
+    #     run_episode(env, rl_module, env_to_module, module_to_env)
+    print(get_scenarios())

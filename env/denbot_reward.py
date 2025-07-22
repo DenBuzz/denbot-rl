@@ -135,7 +135,7 @@ class DenBotReward(RewardFunction):
 
     def _distance_player_ball(self, agent: str, car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
         agent_dist = np.linalg.norm(car_physics.position - ball.position) - cv.BALL_RADIUS
-        return np.exp2(-agent_dist / cv.CAR_MAX_SPEED)
+        return np.exp2(-agent_dist / cv.CAR_MAX_SPEED) - 1
 
     def _offensive_angle(self, agent: str, car: Car, car_physics: PhysicsObject, ball: PhysicsObject, state: GameState) -> float:
         goal_vec = ball.position[:2] - cv.ORANGE_GOAL_BACK[:2]

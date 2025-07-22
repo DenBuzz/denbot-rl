@@ -9,6 +9,10 @@ def one2one(agent_id: AgentID, episode: EpisodeType, **kwargs) -> PolicyID:
     return agent_id
 
 
+def denbot_map(agent_id, episode):
+    return "denbot"
+
+
 def build_algorithm_config(config: dict):
     """Build up an rllib algorithm config"""
 
@@ -16,7 +20,9 @@ def build_algorithm_config(config: dict):
     algo_config.environment(env=RLEnv)
 
     if rl_module_config := config.pop("rl_modules", None):
-        mrlm = MultiRLModuleSpec(rl_module_specs={key: RLModuleSpec(module_class=val) for key, val in rl_module_config.items()})
+        mrlm = MultiRLModuleSpec(
+            rl_module_specs={key: RLModuleSpec(module_class=val) for key, val in rl_module_config.items()}
+        )
         algo_config.rl_module(rl_module_spec=mrlm)
 
     for key, val in config.items():

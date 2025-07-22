@@ -34,6 +34,7 @@ class RLEnv(MultiAgentEnv):
         self.action_spaces = self.action_parser.action_space
         self.sim = RocketSimEngine()
         self.renderer = RLViserRenderer()
+        self._current_task = 0
 
     def reset(self, *, seed: int | None = None, options: dict | None = None) -> tuple[MultiAgentDict, MultiAgentDict]:
         super().reset(seed=seed, options=options)
@@ -50,7 +51,9 @@ class RLEnv(MultiAgentEnv):
         obs = self.obs_builder.build_obs(state=self.state)
         return obs, {}
 
-    def step(self, action_dict: MultiAgentDict) -> tuple[MultiAgentDict, MultiAgentDict, MultiAgentDict, MultiAgentDict, MultiAgentDict]:
+    def step(
+        self, action_dict: MultiAgentDict
+    ) -> tuple[MultiAgentDict, MultiAgentDict, MultiAgentDict, MultiAgentDict, MultiAgentDict]:
         engine_actions = self.action_parser.parse_action(action_dict=action_dict)
         self.state = self.sim.step(actions=engine_actions, shared_info={})
         obs = self.obs_builder.build_obs(state=self.state)
@@ -75,6 +78,14 @@ class RLEnv(MultiAgentEnv):
 
     def close(self):
         self.sim.close()
+        self.renderer.close()
+
+    @property
+    def current_task(self):
+        return self._current_task
+
+    def set_task(self, task):
+        self._current_task = task
 
     def render(self) -> None:
         return self.renderer.render(self.state, {})

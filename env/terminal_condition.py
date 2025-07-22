@@ -24,16 +24,16 @@ class AnyCondition(TerminalCondition):
         return combined_dones
 
 
-class TimeoutCondition:
+class TimeoutCondition(TerminalCondition):
     def __init__(self, timeout_seconds: float):
         self.timeout_seconds = timeout_seconds
 
     def reset(self, info: dict): ...
 
-    def is_done(self, agents: list[str], state: GameState) -> dict[str, bool]:
+    def is_done(self, state: GameState) -> dict[str, bool]:
         time_elapsed = state.tick_count / TICKS_PER_SECOND
         done = time_elapsed >= self.timeout_seconds
-        return {agent: done for agent in agents}
+        return {agent: done for agent in state.cars}
 
 
 class NoTouchTimeoutCondition:
@@ -55,13 +55,13 @@ class NoTouchTimeoutCondition:
         return {agent: done for agent in agents}
 
 
-class BallTouchTermination:
+class BallTouchTermination(TerminalCondition):
     """Terminate on the ball being touched"""
 
     def reset(self, info: dict): ...
 
-    def is_done(self, agents: list[str], state: GameState) -> dict[str, bool]:
-        return {agent: state.cars[agent].ball_touches > 0 for agent in agents}
+    def is_done(self, state: GameState) -> dict[str, bool]:
+        return {agent: car.ball_touches > 0 for agent, car in state.cars.items()}
 
 
 class CarInFront(TerminalCondition):
@@ -73,7 +73,9 @@ class CarInFront(TerminalCondition):
     def reset(self, info: dict): ...
 
     def is_done(self, state: GameState) -> dict[str, bool]:
-        return {agent: car.physics.position[1] - state.ball.position[1] > self.buffer for agent, car in state.cars.items()}
+        return {
+            agent: car.physics.position[1] - state.ball.position[1] > self.buffer for agent, car in state.cars.items()
+        }
 
 
 class NoFlip:
@@ -110,7 +112,7 @@ class BallMinHeight(TerminalCondition):
         return {agent: state.ball.position[2] < self.height for agent in state.cars}
 
 
-class CarMinHeight:
+class CarMinHeight(TerminalCondition):
     """Terminate on the car dropping below given height"""
 
     def __init__(self, height: float, delay: float = 1.0):
@@ -119,10 +121,10 @@ class CarMinHeight:
 
     def reset(self, info: dict): ...
 
-    def is_done(self, agents: list[str], state: GameState) -> dict[str, bool]:
+    def is_done(self, state: GameState) -> dict[str, bool]:
         if state.tick_count / TICKS_PER_SECOND < self.delay:
-            return {agent: False for agent in agents}
-        return {agent: state.cars[agent].physics.position[2] < self.height for agent in agents}
+            return {agent: False for agent in state.cars}
+        return {agent: car.physics.position[2] < self.height for agent, car in state.cars.items()}
 
 
 class MaxTouches:

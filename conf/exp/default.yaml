@@ -24,7 +24,7 @@ algorithm:
   multi_agent:
     policy_mapping_fn:
       _target_: hydra.utils.get_method
-      path: conf.build_config.mapping_fn
+      path: rllib.build_config.denbot_map
 run_config:
   checkpoint_config:
     num_to_keep: 5

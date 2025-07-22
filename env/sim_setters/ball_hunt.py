@@ -3,10 +3,10 @@ import rlgym.rocket_league.common_values as cv
 from rlgym.rocket_league.api import GameState
 from rlgym.rocket_league.sim import RocketSimEngine
 
-from env.sim_setters.state_mutator import StateMutator
+from env.sim_setters.rocket_sim_setter import RocketSimSetter
 
 
-class BallHunt(StateMutator):
+class BallHunt(RocketSimSetter):
     CURRICULUM_STEPS = 10
     Y_MAX = cv.BACK_WALL_Y - cv.CORNER_CATHETUS_LENGTH
     Y_START = cv.BALL_RADIUS * 6
@@ -15,14 +15,19 @@ class BallHunt(StateMutator):
     SPEED_MAX = cv.BALL_MAX_SPEED / 5
 
     def reset(self, info: dict):
-        task = info.get("task", 0)
+        task = info.get("task", 5)
         self.y_max = self.Y_MAX * (task / self.CURRICULUM_STEPS)
         self.x_max = self.X_MAX * (task / self.CURRICULUM_STEPS)
         self.angle_max = np.pi * (task / self.CURRICULUM_STEPS)
         self.distance_max = 4 * cv.BALL_RADIUS + 40 * cv.BALL_RADIUS * (task / self.CURRICULUM_STEPS)
         self.speed_max = self.SPEED_MAX * (task / self.CURRICULUM_STEPS) + 1
 
-    def apply(self, state: GameState, sim: RocketSimEngine) -> None:
+    @property
+    def agents(self) -> list[str]:
+        return ["blue-0"]
+
+    def apply(self, sim: RocketSimEngine) -> GameState:
+        state: GameState = sim.create_base_state()
         state.ball.position = np.array(
             [
                 self.rng.uniform(-self.x_max, self.x_max),
@@ -46,8 +51,12 @@ class BallHunt(StateMutator):
         ball_x, ball_y = state.ball.position[:2]
         car_dx = self.rng.uniform(2 * cv.BALL_RADIUS, self.distance_max)
         car_dy = self.rng.uniform(2 * cv.BALL_RADIUS, self.distance_max)
-        car_x = np.clip(ball_x + car_dx, -cv.SIDE_WALL_X + cv.CORNER_CATHETUS_LENGTH, cv.SIDE_WALL_X - cv.CORNER_CATHETUS_LENGTH)
-        car_y = np.clip(ball_y + car_dy, -cv.BACK_WALL_Y + cv.CORNER_CATHETUS_LENGTH, cv.BACK_WALL_Y - cv.CORNER_CATHETUS_LENGTH)
+        car_x = np.clip(
+            ball_x + car_dx, -cv.SIDE_WALL_X + cv.CORNER_CATHETUS_LENGTH, cv.SIDE_WALL_X - cv.CORNER_CATHETUS_LENGTH
+        )
+        car_y = np.clip(
+            ball_y + car_dy, -cv.BACK_WALL_Y + cv.CORNER_CATHETUS_LENGTH, cv.BACK_WALL_Y - cv.CORNER_CATHETUS_LENGTH
+        )
         car.physics.position = np.array([car_x, car_y, 17])
 
         vec2ball = state.ball.position - car.physics.position
@@ -59,9 +68,11 @@ class BallHunt(StateMutator):
         car.boost_amount = self.rng.uniform(0, 100)
 
         state.cars["blue-0"] = car
+        sim.set_state(state, {})
+        return state
 
 
-class SpeedFlip(StateMutator):
+class SpeedFlip(RocketSimSetter):
     CURRICULUM_STEPS = 10
     SPEED_MAX = cv.BALL_MAX_SPEED / 20
     SECTOR_MAX = np.pi / 4
@@ -99,8 +110,12 @@ class SpeedFlip(StateMutator):
 
         ball_x, ball_y = state.ball.position[:2]
 
-        car_x = np.clip(ball_x + car_dx, -cv.SIDE_WALL_X + cv.CORNER_CATHETUS_LENGTH, cv.SIDE_WALL_X - cv.CORNER_CATHETUS_LENGTH)
-        car_y = np.clip(ball_y + car_dy, -cv.BACK_WALL_Y + cv.CORNER_CATHETUS_LENGTH, cv.BACK_WALL_Y - cv.CORNER_CATHETUS_LENGTH)
+        car_x = np.clip(
+            ball_x + car_dx, -cv.SIDE_WALL_X + cv.CORNER_CATHETUS_LENGTH, cv.SIDE_WALL_X - cv.CORNER_CATHETUS_LENGTH
+        )
+        car_y = np.clip(
+            ball_y + car_dy, -cv.BACK_WALL_Y + cv.CORNER_CATHETUS_LENGTH, cv.BACK_WALL_Y - cv.CORNER_CATHETUS_LENGTH
+        )
 
         car.physics.position = np.array([car_x, car_y, 17])
         yaw = car_angle

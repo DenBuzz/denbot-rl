@@ -18,48 +18,18 @@ checkpoint_config:
 algorithm:
 
   environment:
-    env_config:
-      obs_builder:
-        _target_: env.observers.denbot_obs.DenbotObs
-      action_parser:
-        _target_: env.action_parser.SeerAction
-      sim_setter:
-        _target_: env.sim_setters.air_dribble.WallAirDribble
-      reward_function:
-        _target_: env.denbot_reward.DenBotReward
-        goal_scored: 1
-        ball_touch: 0.025
-        boost_collect: 0.1
-        distance_player_ball: 0.000625
-        offensive_angle: 0.00125
-        distance_ball_goal: 0.0025
-        facing_ball: 0.000625
-        velocity_player_to_ball: 0.00125
-        velocity_ball_goal: 0.00125
-        velocity: 0.0025
-        boost_amount: 0
-        boost_proximity: 0
-      termination_condition:
-        _target_: env.terminal_condition.GoalCondition
-      truncation_condition:
-        _target_: env.terminal_condition.AnyCondition
-        conditions:
-          - _target_: env.terminal_condition.BallMinHeight
-            height: 118.15  # 93.15 + 25, resting plus buffer
-            delay: 2
-          - _target_: env.terminal_condition.CarInFront
-            buffer: 150  # About 1.5 ball radius
+    env_config: ${scenarios.ball_hunt.env_config}
 
   training:
-    gamma: 0.99
+    gamma: 0.993
     lambda_: 0.95
-    lr: 1e-4
+    lr: 2e-5
     entropy_coeff: 
       - [0, 0.02]
       - [1e8, 0.01]
-    train_batch_size_per_learner: 4096
+    train_batch_size_per_learner: 16384
     num_epochs: 32
-    minibatch_size: 1024
+    minibatch_size: 4096
     shuffle_batch_per_epoch: True
     use_kl_loss: false
 
@@ -73,10 +43,17 @@ algorithm:
       pi_hiddens: [1024, 1024]
       vf_hiddens: [1024, 1024]
 
-  # callbacks:
-  #   episode_data:
-  #     _target_: training.callbacks.EpisodeData
-
+  callbacks:
+    callbacks_class:
+      _target_: env.curriculum.curriculum.CurriculumCallback
+      curriculum_manager:
+        _target_: env.curriculum.curriculum.CurriculumManager
+        tasks:
+          -
+            - ${scenarios.ball_hunt}
+          -
+            - ${scenarios.wall_air_dribble}
+            - ${scenarios.field_air_dribble}
   multi_agent:
     policies:
       - "denbot"

@@ -20,6 +20,7 @@ class WallAirDribble(RocketSimSetter):
     def apply(self, sim: RocketSimEngine) -> GameState:
         state: GameState = sim.create_base_state()
         ball_x = cv.SIDE_WALL_X - 4 * (2 * cv.BALL_RADIUS)
+        # ball_x = cv.SIDE_WALL_X - np.random.uniform(4, 12) * cv.BALL_RADIUS
         if self.rng.random() > 0.5:
             # reflect sometimes
             ball_x = -ball_x
@@ -51,6 +52,7 @@ class WallAirDribble(RocketSimSetter):
         car.physics.linear_velocity = state.ball.linear_velocity
         car.physics.euler_angles = np.array([0, np.pi / 2 * (1 - np.sign(ball_x)), 0])
         car.boost_amount = 100
+        # car.boost_amount = np.random.uniform(75, 100)
 
         state.cars["blue-0"] = car
         sim.set_state(state, {})
@@ -61,10 +63,18 @@ class FieldAirDribble(WallAirDribble):
     def __init__(self) -> None:
         super().__init__()
 
+    @property
+    def agents(self) -> list[str]:
+        return ["blue-0"]
+
     def apply(self, sim: RocketSimEngine) -> GameState:
         state: GameState = sim.create_base_state()
-        ball_x = self.rng.uniform(-cv.SIDE_WALL_X + cv.CORNER_CATHETUS_LENGTH, cv.SIDE_WALL_X - cv.CORNER_CATHETUS_LENGTH)
-        ball_y = self.rng.uniform(-cv.BACK_WALL_Y + cv.CORNER_CATHETUS_LENGTH, cv.BACK_WALL_Y - cv.CORNER_CATHETUS_LENGTH)
+        ball_x = self.rng.uniform(
+            -cv.SIDE_WALL_X + cv.CORNER_CATHETUS_LENGTH, cv.SIDE_WALL_X - cv.CORNER_CATHETUS_LENGTH
+        )
+        ball_y = self.rng.uniform(
+            -cv.BACK_WALL_Y + cv.CORNER_CATHETUS_LENGTH, cv.BACK_WALL_Y - cv.CORNER_CATHETUS_LENGTH
+        )
 
         state.ball.position = np.array(
             [
@@ -92,6 +102,7 @@ class FieldAirDribble(WallAirDribble):
         # car.physics.linear_velocity = state.ball.linear_velocity
         car.physics.euler_angles = np.array([0, np.pi / 2, 0])
         car.boost_amount = 100
+        # car.boost_amount = np.random.uniform(75, 100)
 
         state.cars["blue-0"] = car
         sim.set_state(state, {})
