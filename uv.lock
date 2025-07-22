@@ -357,7 +357,9 @@ dependencies = [
     { name = "pyright" },
     { name = "pytest" },
     { name = "ray", extra = ["rllib"] },
-    { name = "rlgym", extra = ["all"] },
+    { name = "rlgym-api" },
+    { name = "rlgym-rocket-league" },
+    { name = "rlviser-py" },
     { name = "rocketsim" },
     { name = "ruff" },
     { name = "streamlit" },
@@ -380,7 +382,9 @@ requires-dist = [
     { name = "pyright", specifier = ">=1.1.397" },
     { name = "pytest", specifier = ">=8.3.5" },
     { name = "ray", extras = ["rllib"], specifier = ">=2.43.0" },
-    { name = "rlgym", extras = ["all"], specifier = ">=2.0.0" },
+    { name = "rlgym-api", specifier = ">=2.0.0" },
+    { name = "rlgym-rocket-league", specifier = ">=2.0.1" },
+    { name = "rlviser-py", specifier = ">=0.6.10" },
     { name = "rocketsim", specifier = "==2.1.1.post1" },
     { name = "ruff", specifier = ">=0.11.0" },
     { name = "streamlit", specifier = ">=1.44.1" },
@@ -1110,11 +1114,11 @@ wheels = [
 
 [[package]]
 name = "narwhals"
-version = "1.47.1"
+version = "1.48.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/fa/97/f9072f2dd368e52a37c0f5578f5910c689d5ac9c1108f8d2ed6c84c1c8fc/narwhals-1.47.1.tar.gz", hash = "sha256:3e477a54984a141b500ebd65d0b946b7a991080939b4a3321a6b01ea97258c9a", size = 516244, upload-time = "2025-07-17T18:23:04.403Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/fc/cd/7395d6c247e821cba6243e9f7ed202fae3fefef643c96581b5ecab927bad/narwhals-1.48.0.tar.gz", hash = "sha256:7243b456cbdb60edb148731a8f9b203f473a373a249ad66c699362508730e63f", size = 515112, upload-time = "2025-07-21T10:06:08.215Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c0/15/278693412221859a0159719878e51a79812a189edceef2fe325160a8e661/narwhals-1.47.1-py3-none-any.whl", hash = "sha256:b9f2b2557aba054231361a00f6fcabc5017e338575e810e82155eb34e38ace93", size = 375506, upload-time = "2025-07-17T18:23:02.492Z" },
+    { url = "https://files.pythonhosted.org/packages/75/72/5406044d4c251f3d8f78cec05b74839d0332d34c9e94b59120f3697ecf48/narwhals-1.48.0-py3-none-any.whl", hash = "sha256:2bbddc3adeed0c5b15ead8fe61f1d5e459f00c1d2fa60921e52a0f9bdc06077d", size = 376866, upload-time = "2025-07-21T10:06:06.561Z" },
 ]
 
 [[package]]
@@ -1838,11 +1842,11 @@ wheels = [
 
 [[package]]
 name = "retrying"
-version = "1.4.0"
+version = "1.4.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/4e/e5/986cabb44cc073a8bf50c3d8d4c85514c6741fff78ebf853a0ebcd441a97/retrying-1.4.0.tar.gz", hash = "sha256:efa99c78bf4fbdbe6f0cba4101470fbc684b93d30ca45ffa1288443a9805172f", size = 11202, upload-time = "2025-06-24T10:08:59.091Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6a/2e/90b236e496810c23eb428a1f3e2723849eb219d6196a4f7afe16f4981b5c/retrying-1.4.1.tar.gz", hash = "sha256:4d206e0ed2aff5ef2f3cd867abb9511e9e8f31127c5aca20f1d5246e476903b0", size = 11344, upload-time = "2025-07-19T09:39:01.906Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/96/7e/5a83e2c56761d347128e58b3f23af829fd145bfb1afeff18927bc5915459/retrying-1.4.0-py3-none-any.whl", hash = "sha256:6509d829c70271937605bce361c8f76e91f9123d355d14df7dc6972b1518064a", size = 11972, upload-time = "2025-06-24T10:08:57.794Z" },
+    { url = "https://files.pythonhosted.org/packages/7f/25/f3b628e123699139b959551ed922f35af97fa1505e195ae3e6537a14fbc3/retrying-1.4.1-py3-none-any.whl", hash = "sha256:d736050c1adfc0a71fa022d9198ee130b0e66be318678a3fdd8b1b8872dc0997", size = 12184, upload-time = "2025-07-19T09:39:00.574Z" },
 ]
 
 [[package]]
@@ -1856,20 +1860,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/a1/53/830aa4c3066a8ab0ae9a9955976fb770fe9c6102117c8ec4ab3ea62d89e8/rich-14.0.0.tar.gz", hash = "sha256:82f1bc23a6a21ebca4ae0c45af9bdbc492ed20231dcb63f297d6d1021a9d5725", size = 224078, upload-time = "2025-03-30T14:15:14.23Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0d/9b/63f4c7ebc259242c89b3acafdb37b41d1185c07ff0011164674e9076b491/rich-14.0.0-py3-none-any.whl", hash = "sha256:1c9491e1951aac09caffd42f448ee3d04e58923ffe14993f6e83068dc395d7e0", size = 243229, upload-time = "2025-03-30T14:15:12.283Z" },
-]
-
-[[package]]
-name = "rlgym"
-version = "2.0.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "rlgym-api" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/6f/da/3cb65a1ac228e3b1d20f2bec7cc2fd047508a07830568995c163f7845f7a/rlgym-2.0.1.tar.gz", hash = "sha256:9155708e3f82a7235f9b4276ecc4dc55e56626bfdcf0ec616093179714fb4da9", size = 9457, upload-time = "2025-04-27T14:44:27.471Z" }
-
-[package.optional-dependencies]
-all = [
-    { name = "rlgym-rocket-league", extra = ["all"] },
 ]
 
 [[package]]
@@ -1887,12 +1877,6 @@ dependencies = [
     { name = "rlgym-api" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/99/21/b87ef7ebb0d76e654753349a4f343068d08e1a9eaffd9c77c0593b43668f/rlgym-rocket-league-2.0.1.tar.gz", hash = "sha256:3be8e9d2f1cfb6514e0e3d455fb33ff95e26eb7c399f819fff0258025cf4d501", size = 78840, upload-time = "2025-04-27T14:43:37.805Z" }
-
-[package.optional-dependencies]
-all = [
-    { name = "rlviser-py" },
-    { name = "rocketsim" },
-]
 
 [[package]]
 name = "rlviser-py"

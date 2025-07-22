@@ -1,4 +1,4 @@
 class ObserverMap:
-    """Maps agents to specified sinlge agent observers.
+    """Maps agents to specified single agent observers.
     Intended for using the correct
     """
